@@ -85,6 +85,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/aspirantes-docentes', [AspiranteDocenteController::class, 'index']);
     Route::post('/aspirantes-docentes', [AspiranteDocenteController::class, 'createAspirante']);
     Route::get('/aspirantes-docentes/{id}/materias', [AspiranteDocenteController::class, 'getMateriasPostuladas']);
+    Route::put('/aspirantes-docentes/{id}', [AspiranteDocenteController::class, 'updateAspirante']);
+    Route::delete('/aspirantes-docentes/{id}', [AspiranteDocenteController::class, 'deleteAspirante']);
     Route::get('/aspirantes-docentes/{id}/materias/{idMateria}/requisitos', [AspiranteDocenteController::class, 'getRequisitosMateria']);
     Route::post('/aspirantes-docentes/requisito/toggle', [AspiranteDocenteController::class, 'toggleRequisito']);
     Route::post('/aspirantes-docentes/postular', [AspiranteDocenteController::class, 'postularMateria']);
