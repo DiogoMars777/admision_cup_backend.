@@ -35,7 +35,15 @@ class DatabaseSeeder extends Seeder
         // but since we insert in order, it should be fine. For PostgreSQL we can use DB::statement).
         // Since we are inserting in the correct order (the JSON was dumped in order), it usually works.
         // Let's ensure the order is correct just in case.
-        $tablesOrder = ['rol', 'persona', 'usuario', 'carrera', 'materia', 'aula', 'gestion_cup', 'gestion_academica', 'docente', 'docente_materia', 'grupo', 'grupo_materia', 'postulante', 'postulante_grupo', 'evaluacion', 'programacion_evaluacion'];
+        $tablesOrder = [
+            'rol', 'persona', 'usuario', 'carrera', 'materia', 'aula', 
+            'gestion_cup', 'gestion_academica', 
+            'aspirante_docente', 'postulacion_docente',
+            'docente', 'docente_materia', 
+            'grupo', 'grupo_materia', 'postulante', 'postulante_carrera', 'postulante_grupo', 
+            'evaluacion', 'programacion_evaluacion',
+            'requisito', 'materia_requisito', 'docente_requisito', 'postulante_requisito', 'comprobante', 'pago'
+        ];
 
         foreach ($tablesOrder as $table) {
             if (isset($data[$table]) && count($data[$table]) > 0) {

@@ -144,13 +144,23 @@ class DemoDataSeeder extends Seeder
         // ═══════════════════════════════════════════════════════════
         // 7. GESTIÓN ACADÉMICA
         // ═══════════════════════════════════════════════════════════
-        $gestionId = DB::table('gestion_academica')->where('nombre', 'Gestión 2026')->value('id');
+        $gestionCupId = DB::table('gestion_cup')->where('nombre', 'CUP 2')->value('id');
+        if (!$gestionCupId) {
+            $gestionCupId = DB::table('gestion_cup')->insertGetId([
+                'nombre' => 'CUP 2',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        $gestionId = DB::table('gestion_academica')->where('nombre', 'Gestion CUP 2 2026')->value('id');
         if (!$gestionId) {
             $gestionId = DB::table('gestion_academica')->insertGetId([
-                'nombre' => 'Gestión 2026',
+                'nombre' => 'Gestion CUP 2 2026',
                 'año' => 2026,
-                'fecha_ini' => '2026-02-01',
-                'fecha_fin' => '2026-06-30',
+                'id_gestion_cup' => $gestionCupId,
+                'fecha_ini' => '2026-08-01',
+                'fecha_fin' => '2026-10-31',
                 'estado' => 'Activo',
                 'created_at' => now(),
                 'updated_at' => now(),
