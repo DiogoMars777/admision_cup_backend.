@@ -2,31 +2,38 @@
     "rol": [
         {
             "id": 1,
-            "nombre": "Super Administrador",
-            "descripcion": "Administrador principal del sistema",
-            "created_at": "2026-06-11 22:14:47",
-            "updated_at": "2026-06-11 22:14:47"
+            "nombre": "Super Admin",
+            "descripcion": "Super Administrador del Sistema",
+            "created_at": "2026-06-12 22:56:48",
+            "updated_at": "2026-06-12 22:56:48"
         },
         {
             "id": 2,
-            "nombre": "Postulante",
-            "descripcion": "Postulante al CUP",
-            "created_at": "2026-06-11 22:14:47",
-            "updated_at": "2026-06-11 22:14:47"
+            "nombre": "Administrador",
+            "descripcion": "Administrador",
+            "created_at": "2026-06-12 22:56:48",
+            "updated_at": "2026-06-12 22:56:48"
         },
         {
             "id": 3,
-            "nombre": "Docente",
-            "descripcion": "Docente del CUP",
-            "created_at": "2026-06-11 22:14:47",
-            "updated_at": "2026-06-11 22:14:47"
+            "nombre": "Coordinador",
+            "descripcion": "Coordinador",
+            "created_at": "2026-06-12 22:56:48",
+            "updated_at": "2026-06-12 22:56:48"
         },
         {
             "id": 4,
-            "nombre": "Administrativo",
-            "descripcion": "Personal administrativo del CUP",
-            "created_at": "2026-06-11 22:14:47",
-            "updated_at": "2026-06-11 22:14:47"
+            "nombre": "Docente",
+            "descripcion": "Docente",
+            "created_at": "2026-06-12 22:56:48",
+            "updated_at": "2026-06-12 22:56:48"
+        },
+        {
+            "id": 5,
+            "nombre": "Postulante",
+            "descripcion": "Postulante",
+            "created_at": "2026-06-12 22:56:48",
+            "updated_at": "2026-06-12 22:56:48"
         }
     ],
     "persona": [
@@ -54,9 +61,316 @@
             "updated_at": "2026-06-11 22:14:47"
         }
     ],
-    "carrera": [],
-    "materia": [],
-    "aula": [],
+    "carrera": [
+        {
+            "id": 1,
+            "nombre": "Ingenieria de Sistemas",
+            "descripcion": "Carrera de Ingenieria de Sistemas",
+            "estado": "Activo",
+            "created_at": "2026-06-12 23:01:09",
+            "updated_at": "2026-06-12 23:01:09"
+        },
+        {
+            "id": 2,
+            "nombre": "Ingenieria Informatica",
+            "descripcion": "Carrera de Ingenieria Informatica",
+            "estado": "Activo",
+            "created_at": "2026-06-12 23:01:09",
+            "updated_at": "2026-06-12 23:01:09"
+        },
+        {
+            "id": 3,
+            "nombre": "Ingenieria de Redes",
+            "descripcion": "Carrera de Ingenieria de Redes",
+            "estado": "Activo",
+            "created_at": "2026-06-12 23:01:09",
+            "updated_at": "2026-06-12 23:01:09"
+        },
+        {
+            "id": 4,
+            "nombre": "Ingenieria Robotica",
+            "descripcion": "Carrera de Ingenieria Robotica",
+            "estado": "Activo",
+            "created_at": "2026-06-12 23:01:09",
+            "updated_at": "2026-06-12 23:01:09"
+        }
+    ],
+    "materia": [
+        {
+            "id": 1,
+            "nombre": "Matematica",
+            "descripcion": "Materia de Matematica",
+            "estado": "Activo",
+            "created_at": "2026-06-12 22:56:48",
+            "updated_at": "2026-06-12 22:56:48"
+        },
+        {
+            "id": 2,
+            "nombre": "Ingles",
+            "descripcion": "Materia de Ingles",
+            "estado": "Activo",
+            "created_at": "2026-06-12 22:56:48",
+            "updated_at": "2026-06-12 22:56:48"
+        },
+        {
+            "id": 3,
+            "nombre": "Fisica",
+            "descripcion": "Materia de Fisica",
+            "estado": "Activo",
+            "created_at": "2026-06-12 22:56:48",
+            "updated_at": "2026-06-12 22:56:48"
+        },
+        {
+            "id": 4,
+            "nombre": "Computacion",
+            "descripcion": "Materia de Computacion",
+            "estado": "Activo",
+            "created_at": "2026-06-12 22:56:48",
+            "updated_at": "2026-06-12 22:56:48"
+        }
+    ],
+    "aula": [
+        {
+            "id": 1,
+            "aula_nro": "A-001",
+            "capacidad": 70,
+            "tipo_aula": "Teorica",
+            "created_at": "2026-06-12 23:01:09",
+            "updated_at": "2026-06-12 23:01:09"
+        },
+        {
+            "id": 2,
+            "aula_nro": "A-002",
+            "capacidad": 70,
+            "tipo_aula": "Teorica",
+            "created_at": "2026-06-12 23:01:09",
+            "updated_at": "2026-06-12 23:01:09"
+        },
+        {
+            "id": 3,
+            "aula_nro": "A-003",
+            "capacidad": 70,
+            "tipo_aula": "Teorica",
+            "created_at": "2026-06-12 23:01:09",
+            "updated_at": "2026-06-12 23:01:09"
+        },
+        {
+            "id": 4,
+            "aula_nro": "A-004",
+            "capacidad": 70,
+            "tipo_aula": "Teorica",
+            "created_at": "2026-06-12 23:01:09",
+            "updated_at": "2026-06-12 23:01:09"
+        },
+        {
+            "id": 5,
+            "aula_nro": "A-005",
+            "capacidad": 70,
+            "tipo_aula": "Teorica",
+            "created_at": "2026-06-12 23:01:09",
+            "updated_at": "2026-06-12 23:01:09"
+        },
+        {
+            "id": 6,
+            "aula_nro": "A-006",
+            "capacidad": 70,
+            "tipo_aula": "Teorica",
+            "created_at": "2026-06-12 23:01:09",
+            "updated_at": "2026-06-12 23:01:09"
+        },
+        {
+            "id": 7,
+            "aula_nro": "A-007",
+            "capacidad": 70,
+            "tipo_aula": "Teorica",
+            "created_at": "2026-06-12 23:01:09",
+            "updated_at": "2026-06-12 23:01:09"
+        },
+        {
+            "id": 8,
+            "aula_nro": "A-008",
+            "capacidad": 70,
+            "tipo_aula": "Teorica",
+            "created_at": "2026-06-12 23:01:09",
+            "updated_at": "2026-06-12 23:01:09"
+        },
+        {
+            "id": 9,
+            "aula_nro": "A-009",
+            "capacidad": 70,
+            "tipo_aula": "Teorica",
+            "created_at": "2026-06-12 23:01:09",
+            "updated_at": "2026-06-12 23:01:09"
+        },
+        {
+            "id": 10,
+            "aula_nro": "A-010",
+            "capacidad": 70,
+            "tipo_aula": "Teorica",
+            "created_at": "2026-06-12 23:01:09",
+            "updated_at": "2026-06-12 23:01:09"
+        },
+        {
+            "id": 11,
+            "aula_nro": "A-011",
+            "capacidad": 70,
+            "tipo_aula": "Teorica",
+            "created_at": "2026-06-12 23:01:09",
+            "updated_at": "2026-06-12 23:01:09"
+        },
+        {
+            "id": 12,
+            "aula_nro": "A-012",
+            "capacidad": 70,
+            "tipo_aula": "Teorica",
+            "created_at": "2026-06-12 23:01:09",
+            "updated_at": "2026-06-12 23:01:09"
+        },
+        {
+            "id": 13,
+            "aula_nro": "A-013",
+            "capacidad": 70,
+            "tipo_aula": "Teorica",
+            "created_at": "2026-06-12 23:01:09",
+            "updated_at": "2026-06-12 23:01:09"
+        },
+        {
+            "id": 14,
+            "aula_nro": "A-014",
+            "capacidad": 70,
+            "tipo_aula": "Teorica",
+            "created_at": "2026-06-12 23:01:09",
+            "updated_at": "2026-06-12 23:01:09"
+        },
+        {
+            "id": 15,
+            "aula_nro": "A-015",
+            "capacidad": 70,
+            "tipo_aula": "Teorica",
+            "created_at": "2026-06-12 23:01:09",
+            "updated_at": "2026-06-12 23:01:09"
+        },
+        {
+            "id": 16,
+            "aula_nro": "A-016",
+            "capacidad": 70,
+            "tipo_aula": "Teorica",
+            "created_at": "2026-06-12 23:01:09",
+            "updated_at": "2026-06-12 23:01:09"
+        },
+        {
+            "id": 17,
+            "aula_nro": "A-017",
+            "capacidad": 70,
+            "tipo_aula": "Teorica",
+            "created_at": "2026-06-12 23:01:09",
+            "updated_at": "2026-06-12 23:01:09"
+        },
+        {
+            "id": 18,
+            "aula_nro": "A-018",
+            "capacidad": 70,
+            "tipo_aula": "Teorica",
+            "created_at": "2026-06-12 23:01:09",
+            "updated_at": "2026-06-12 23:01:09"
+        },
+        {
+            "id": 19,
+            "aula_nro": "A-019",
+            "capacidad": 70,
+            "tipo_aula": "Teorica",
+            "created_at": "2026-06-12 23:01:09",
+            "updated_at": "2026-06-12 23:01:09"
+        },
+        {
+            "id": 20,
+            "aula_nro": "A-020",
+            "capacidad": 70,
+            "tipo_aula": "Teorica",
+            "created_at": "2026-06-12 23:01:09",
+            "updated_at": "2026-06-12 23:01:09"
+        },
+        {
+            "id": 21,
+            "aula_nro": "A-021",
+            "capacidad": 70,
+            "tipo_aula": "Teorica",
+            "created_at": "2026-06-12 23:01:09",
+            "updated_at": "2026-06-12 23:01:09"
+        },
+        {
+            "id": 22,
+            "aula_nro": "A-022",
+            "capacidad": 70,
+            "tipo_aula": "Teorica",
+            "created_at": "2026-06-12 23:01:09",
+            "updated_at": "2026-06-12 23:01:09"
+        },
+        {
+            "id": 23,
+            "aula_nro": "A-023",
+            "capacidad": 70,
+            "tipo_aula": "Teorica",
+            "created_at": "2026-06-12 23:01:09",
+            "updated_at": "2026-06-12 23:01:09"
+        },
+        {
+            "id": 24,
+            "aula_nro": "A-024",
+            "capacidad": 70,
+            "tipo_aula": "Teorica",
+            "created_at": "2026-06-12 23:01:09",
+            "updated_at": "2026-06-12 23:01:09"
+        },
+        {
+            "id": 25,
+            "aula_nro": "A-025",
+            "capacidad": 70,
+            "tipo_aula": "Teorica",
+            "created_at": "2026-06-12 23:01:09",
+            "updated_at": "2026-06-12 23:01:09"
+        },
+        {
+            "id": 26,
+            "aula_nro": "A-026",
+            "capacidad": 70,
+            "tipo_aula": "Teorica",
+            "created_at": "2026-06-12 23:01:09",
+            "updated_at": "2026-06-12 23:01:09"
+        },
+        {
+            "id": 27,
+            "aula_nro": "A-027",
+            "capacidad": 70,
+            "tipo_aula": "Teorica",
+            "created_at": "2026-06-12 23:01:09",
+            "updated_at": "2026-06-12 23:01:09"
+        },
+        {
+            "id": 28,
+            "aula_nro": "A-028",
+            "capacidad": 70,
+            "tipo_aula": "Teorica",
+            "created_at": "2026-06-12 23:01:09",
+            "updated_at": "2026-06-12 23:01:09"
+        },
+        {
+            "id": 29,
+            "aula_nro": "A-029",
+            "capacidad": 70,
+            "tipo_aula": "Teorica",
+            "created_at": "2026-06-12 23:01:09",
+            "updated_at": "2026-06-12 23:01:09"
+        },
+        {
+            "id": 30,
+            "aula_nro": "A-030",
+            "capacidad": 70,
+            "tipo_aula": "Teorica",
+            "created_at": "2026-06-12 23:01:09",
+            "updated_at": "2026-06-12 23:01:09"
+        }
+    ],
     "gestion_cup": [],
     "gestion_academica": [],
     "docente": [],

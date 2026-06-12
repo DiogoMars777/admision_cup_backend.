@@ -17,35 +17,22 @@ class DemoDataSeeder extends Seeder
         // ═══════════════════════════════════════════════════════════
         // 1. ROLES
         // ═══════════════════════════════════════════════════════════
+        $rolesNombres = ['Super Admin', 'Administrador', 'Coordinador', 'Docente', 'Postulante'];
+        foreach ($rolesNombres as $rolNombre) {
+            $id = DB::table('rol')->where('nombre', $rolNombre)->value('id');
+            if (!$id) {
+                DB::table('rol')->insert([
+                    'nombre' => $rolNombre,
+                    'descripcion' => $rolNombre,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
+
         $rolPostulanteId = DB::table('rol')->where('nombre', 'Postulante')->value('id');
-        if (!$rolPostulanteId) {
-            $rolPostulanteId = DB::table('rol')->insertGetId([
-                'nombre' => 'Postulante',
-                'descripcion' => 'Postulante al CUP',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
-
         $rolDocenteId = DB::table('rol')->where('nombre', 'Docente')->value('id');
-        if (!$rolDocenteId) {
-            $rolDocenteId = DB::table('rol')->insertGetId([
-                'nombre' => 'Docente',
-                'descripcion' => 'Docente del CUP',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
-
-        $rolAdminId = DB::table('rol')->where('nombre', 'Administrativo')->value('id');
-        if (!$rolAdminId) {
-            $rolAdminId = DB::table('rol')->insertGetId([
-                'nombre' => 'Administrativo',
-                'descripcion' => 'Personal administrativo del CUP',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
+        $rolAdminId = DB::table('rol')->where('nombre', 'Administrador')->value('id');
 
         // ═══════════════════════════════════════════════════════════
         // 2. CARRERAS
@@ -119,7 +106,7 @@ class DemoDataSeeder extends Seeder
         // ═══════════════════════════════════════════════════════════
         // 5. MATERIAS
         // ═══════════════════════════════════════════════════════════
-        $materias = ['Matemáticas', 'Física', 'Computación', 'Inglés'];
+        $materias = ['Matematica', 'Ingles', 'Fisica', 'Computacion'];
         $materiaIds = [];
         foreach ($materias as $materia) {
             $id = DB::table('materia')->where('nombre', $materia)->value('id');
