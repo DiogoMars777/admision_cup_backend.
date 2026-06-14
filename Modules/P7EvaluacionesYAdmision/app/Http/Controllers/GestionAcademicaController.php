@@ -472,7 +472,7 @@ class GestionAcademicaController extends Controller
                     DB::table('admision')
                         ->where('id_postulante', $pId)
                         ->where('id_gestionacademica', $id)
-                        ->update(['estado' => 'Reprobado', 'updated_at' => now()]);
+                        ->update(['estado' => 'Reprobado', 'observación' => 'Sin notas registradas', 'updated_at' => now()]);
                     continue;
                 }
                 
@@ -498,7 +498,7 @@ class GestionAcademicaController extends Controller
                     DB::table('admision')
                         ->where('id_postulante', $pId)
                         ->where('id_gestionacademica', $id)
-                        ->update(['estado' => 'Reprobado', 'updated_at' => now()]);
+                        ->update(['estado' => 'Reprobado', 'promedio_fin' => round($promedioFinal, 1), 'observación' => 'Promedio inferior a 60', 'updated_at' => now()]);
                 }
             }
 
@@ -539,12 +539,12 @@ class GestionAcademicaController extends Controller
                     DB::table('admision')
                         ->where('id_postulante', $pId)
                         ->where('id_gestionacademica', $id)
-                        ->update(['estado' => 'Aprobado', 'id_carrera' => $asignado, 'updated_at' => now()]);
+                        ->update(['estado' => 'Aprobado', 'id_carrera' => $asignado, 'promedio_fin' => $pa['promedio'], 'observación' => 'Aprobado y asignado', 'updated_at' => now()]);
                 } else {
                     DB::table('admision')
                         ->where('id_postulante', $pId)
                         ->where('id_gestionacademica', $id)
-                        ->update(['estado' => 'Sin Cupo', 'updated_at' => now()]);
+                        ->update(['estado' => 'Sin Cupo', 'promedio_fin' => $pa['promedio'], 'observación' => 'Sin cupo en opciones', 'updated_at' => now()]);
                 }
             }
 

@@ -128,6 +128,8 @@ class AspiranteDocenteController extends Controller
                 'cumple' => $request->cumplido,
                 'fecha_revision' => now(),
                 'estado' => $request->cumplido ? 'Cumplido' : 'Pendiente',
+                'id_administrativo' => auth()->check() ? auth()->user()->id_persona : null,
+                'observacion' => $request->cumplido ? 'Validado correctamente' : 'Falta presentar o no es válido',
                 'updated_at' => now()
             ]
         );
