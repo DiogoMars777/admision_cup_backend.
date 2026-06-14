@@ -64,6 +64,27 @@ class PostulanteController extends Controller
                     $postulante->modalidad2 = $c->modalidad_nombre ?? '';
                 }
             }
+
+            $grupoInfo = DB::table('postulante_grupo')
+                ->join('grupo', 'postulante_grupo.id_grupo', '=', 'grupo.id')
+                ->join('gestion_academica', 'grupo.id_gestionacademica', '=', 'gestion_academica.id')
+                ->join('gestion_cup', 'gestion_academica.id_gestion_cup', '=', 'gestion_cup.id')
+                ->where('postulante_grupo.id_postulante', $postulante->id)
+                ->select(
+                    'grupo.nombre as grupo_nombre',
+                    'grupo.turno as grupo_turno',
+                    'gestion_academica.año as gestion_anio',
+                    'gestion_cup.nombre as cup_nombre'
+                )
+                ->first();
+                
+            if ($grupoInfo) {
+                $postulante->grupo_asignado = $grupoInfo->grupo_nombre . ' (' . $grupoInfo->grupo_turno . ')';
+                $postulante->gestion_asignada = $grupoInfo->cup_nombre . ' - ' . $grupoInfo->gestion_anio;
+            } else {
+                $postulante->grupo_asignado = null;
+                $postulante->gestion_asignada = null;
+            }
         }
 
         return response()->json($postulantes);
@@ -211,6 +232,7 @@ class PostulanteController extends Controller
             'modalidad1' => 'nullable|string',
             'carrera2' => 'nullable|string',
             'modalidad2' => 'nullable|string',
+            'email' => 'nullable|email|unique:persona,correo,' . $id,
         ]);
 
         DB::beginTransaction();
@@ -220,8 +242,17 @@ class PostulanteController extends Controller
                 'nombre' => $request->nombre,
                 'sexo' => $request->sexo,
                 'telefono' => $request->telefono,
+                'correo' => $request->email,
                 'updated_at' => now(),
             ]);
+
+            // Actualizar usuario si existe y si hay correo
+            if ($request->email) {
+                \App\Models\P1_GestionDeSeguridadYAcceso\Usuario::where('id_persona', $id)->update([
+                    'email' => $request->email,
+                    'updated_at' => now(),
+                ]);
+            }
 
             // Actualizar postulante con turno y modalidad preferida
             \App\Models\P2_GestionDePostulantes\Postulante::where('id_persona', $id)->update([
@@ -365,7 +396,6 @@ class PostulanteController extends Controller
                                     'id_programacion_evaluacion' => $prog->id,
                                     'id_materia' => $prog->id_materia,
                                     'puntaje_obtenido' => null,
-                                    'estado' => 'Pendiente',
                                     'created_at' => now(),
                                     'updated_at' => now(),
                                 ]);
@@ -407,6 +437,7 @@ class PostulanteController extends Controller
             return response()->json(['message' => 'Pago procesado y usuario habilitado exitosamente.']);
         } catch (\Exception $e) {
             DB::rollBack();
+            \Illuminate\Support\Facades\Log::error("PAGAR ERROR: " . $e->getMessage() . "\n" . $e->getTraceAsString());
             return response()->json(['message' => 'Error al procesar el pago.', 'error' => $e->getMessage()], 500);
         }
     }

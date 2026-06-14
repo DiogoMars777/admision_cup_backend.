@@ -25,7 +25,8 @@ class DocenteAsignadorController extends Controller
             ->join('grupo', 'grupo.id', '=', 'grupo_materia.id_grupo')
             ->join('horario', 'grupo_materia.id', '=', 'horario.id_grupo_materia')
             ->where('grupo.id_gestionacademica', $gestionId)
-            ->count();
+            ->distinct()
+            ->count('grupo_materia.id');
 
         // 3. Asignaciones activas (grupo_materia con id_docente NOT NULL)
         $asignacionesActivasCount = DB::table('grupo_materia')
@@ -115,7 +116,7 @@ class DocenteAsignadorController extends Controller
                       ->join('horario', 'grupo_materia.id', '=', 'horario.id_grupo_materia')
                       ->whereColumn('grupo_materia.id_grupo', 'grupo.id');
             })
-            ->select('id', 'nombre', 'turno')
+            ->select('id', 'nombre', 'turno', 'modalidad')
             ->get();
             
         return response()->json($grupos);
@@ -246,5 +247,83 @@ class DocenteAsignadorController extends Controller
             ]);
 
         return response()->json(['message' => 'Docente quitado correctamente.']);
+    }
+
+    public function asignacionAutomatica($gestionId)
+    {
+        // 1. Obtener todas las materias_grupo de la gestión que NO tienen docente asignado
+        $gruposMateriaSinAsignar = DB::table('grupo_materia')
+            ->join('grupo', 'grupo.id', '=', 'grupo_materia.id_grupo')
+            ->join('horario', 'grupo_materia.id', '=', 'horario.id_grupo_materia')
+            ->where('grupo.id_gestionacademica', $gestionId)
+            ->whereNull('grupo_materia.id_docente')
+            ->select(
+                'grupo_materia.id as id_grupo_materia',
+                'grupo_materia.id_materia',
+                'horario.dia',
+                'horario.hora_ini',
+                'horario.hora_fin'
+            )
+            ->get()
+            ->groupBy('id_grupo_materia');
+
+        $asignados = 0;
+
+        foreach ($gruposMateriaSinAsignar as $idGrupoMateria => $horarios) {
+            $idMateria = $horarios->first()->id_materia;
+
+            $docentesHabilitados = DB::table('docente_materia')
+                ->join('persona as docente', 'docente.id', '=', 'docente_materia.id_docente')
+                ->where('docente_materia.id_materia', $idMateria)
+                ->pluck('docente.id');
+
+            $docentesHabilitados = $docentesHabilitados->shuffle();
+
+            foreach ($docentesHabilitados as $idDocente) {
+                $materiasAsignadas = DB::table('grupo_materia')
+                    ->join('grupo', 'grupo.id', '=', 'grupo_materia.id_grupo')
+                    ->where('grupo.id_gestionacademica', $gestionId)
+                    ->where('grupo_materia.id_docente', $idDocente)
+                    ->count();
+
+                if ($materiasAsignadas >= 4) continue;
+
+                $tieneCruce = false;
+                foreach ($horarios as $horarioDestino) {
+                    $cruces = DB::table('grupo_materia')
+                        ->join('grupo', 'grupo.id', '=', 'grupo_materia.id_grupo')
+                        ->join('horario', 'grupo_materia.id', '=', 'horario.id_grupo_materia')
+                        ->where('grupo.id_gestionacademica', $gestionId)
+                        ->where('grupo_materia.id_docente', $idDocente)
+                        ->where('horario.dia', $horarioDestino->dia)
+                        ->where(function ($query) use ($horarioDestino) {
+                            $query->where('horario.hora_ini', '<', $horarioDestino->hora_fin)
+                                  ->where('horario.hora_fin', '>', $horarioDestino->hora_ini);
+                        })
+                        ->count();
+
+                    if ($cruces > 0) {
+                        $tieneCruce = true;
+                        break;
+                    }
+                }
+
+                if ($tieneCruce) continue;
+
+                DB::table('grupo_materia')
+                    ->where('id', $idGrupoMateria)
+                    ->update([
+                        'id_docente' => $idDocente,
+                        'updated_at' => now()
+                    ]);
+
+                $asignados++;
+                break;
+            }
+        }
+
+        return response()->json([
+            'message' => "Asignación automática completada. Se asignaron {$asignados} docentes a materias que estaban pendientes."
+        ]);
     }
 }

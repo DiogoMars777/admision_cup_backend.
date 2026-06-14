@@ -86,9 +86,9 @@ class HorarioGeneradorController extends Controller
             return ['error' => true, 'message' => 'No existen grupos habilitados para esta gestión.'];
         }
 
-        $materiasDb = DB::table('materia')->whereIn('nombre', ['Matemáticas', 'Física', 'Computación', 'Inglés'])->get()->keyBy('nombre');
+        $materiasDb = DB::table('materia')->whereIn('nombre', ['Matemática', 'Física', 'Computación', 'Inglés'])->get()->keyBy('nombre');
         if ($materiasDb->count() < 4) {
-            return ['error' => true, 'message' => 'Faltan materias base en la base de datos (Matemáticas, Física, Computación, Inglés).'];
+            return ['error' => true, 'message' => 'Faltan materias base en la base de datos (Matemática, Física, Computación, Inglés).'];
         }
 
         $docentes = DB::table('docente')
@@ -106,10 +106,10 @@ class HorarioGeneradorController extends Controller
         }
 
         $matrizBase = [
-            ['Matemáticas', 'Inglés', 'Computación', 'Física'],
-            ['Inglés', 'Matemáticas', 'Física', 'Computación'],
-            ['Computación', 'Física', 'Inglés', 'Matemáticas'],
-            ['Física', 'Computación', 'Matemáticas', 'Inglés']
+            ['Matemática', 'Inglés', 'Computación', 'Física'],
+            ['Inglés', 'Matemática', 'Física', 'Computación'],
+            ['Computación', 'Física', 'Inglés', 'Matemática'],
+            ['Física', 'Computación', 'Matemática', 'Inglés']
         ];
 
         $horariosGenerados = [];

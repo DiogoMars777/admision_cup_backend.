@@ -17,7 +17,7 @@ class DocentePortalController extends Controller
         // 1. Obtener la gestión activa
         $gestionActiva = DB::table('gestion_academica')->where('estado', 'Activo')->first();
         if (!$gestionActiva) {
-            return response()->json(['message' => 'No hay gestión activa'], 404);
+            return response()->json(['sin_gestion' => true, 'message' => 'No hay gestión activa']);
         }
 
         // 2. Obtener grupos asignados al docente

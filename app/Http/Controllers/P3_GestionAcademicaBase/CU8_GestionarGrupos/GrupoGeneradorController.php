@@ -17,7 +17,9 @@ class GrupoGeneradorController extends Controller
 
         $postulantes = DB::table('postulante')
             ->join('persona', 'postulante.id_persona', '=', 'persona.id')
+            ->join('usuario', 'usuario.id_persona', '=', 'persona.id')
             ->where('postulante.id_gestionacademica', $id)
+            ->where('usuario.estado', 'Activo')
             ->select(
                 'persona.id', 'persona.nombre', 
                 'postulante.modalidad_preferida', 'postulante.turno_preferido'
@@ -81,7 +83,9 @@ class GrupoGeneradorController extends Controller
         $gestion = DB::table('gestion_academica')->where('id', $id)->first();
         $postulantes = DB::table('postulante')
             ->join('persona', 'postulante.id_persona', '=', 'persona.id')
+            ->join('usuario', 'usuario.id_persona', '=', 'persona.id')
             ->where('postulante.id_gestionacademica', $id)
+            ->where('usuario.estado', 'Activo')
             ->select(
                 'persona.id', 'persona.nombre', 
                 'postulante.modalidad_preferida', 'postulante.turno_preferido'

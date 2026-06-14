@@ -74,7 +74,15 @@ class CargaMasivaController extends Controller
 
         DB::beginTransaction();
         try {
-            $import = new \App\Imports\NotasImport();
+            $gestionActiva = DB::table('gestion_academica')->where('estado', 'Activo')->first();
+            if (!$gestionActiva) {
+                return response()->json([
+                    'message' => 'No hay una gestión académica activa. No se pueden cargar notas.',
+                    'details' => []
+                ], 400);
+            }
+
+            $import = new \App\Imports\NotasImport($gestionActiva->id);
             Excel::import($import, $file);
 
             $resultados = $import->getResultados();
@@ -153,24 +161,24 @@ class CargaMasivaController extends Controller
             $sheet->setCellValue('C1', 'evaluacion_id');
             $sheet->setCellValue('D1', 'puntaje');
 
-            // Ejemplos de las 4 materias
-            $sheet->setCellValue('A2', '12345678');
-            $sheet->setCellValue('B2', 'Matemáticas');
+            // Ejemplos de las 4 materias sin acentos para coincidir con la DB
+            $sheet->setCellValue('A2', '10000000');
+            $sheet->setCellValue('B2', 'Matematica');
             $sheet->setCellValue('C2', '1');
             $sheet->setCellValue('D2', '85.5');
 
-            $sheet->setCellValue('A3', '12345678');
-            $sheet->setCellValue('B3', 'Computación');
+            $sheet->setCellValue('A3', '10000000');
+            $sheet->setCellValue('B3', 'Computacion');
             $sheet->setCellValue('C3', '1');
             $sheet->setCellValue('D3', '90.0');
 
-            $sheet->setCellValue('A4', '87654321');
-            $sheet->setCellValue('B4', 'Física');
+            $sheet->setCellValue('A4', '10000001');
+            $sheet->setCellValue('B4', 'Fisica');
             $sheet->setCellValue('C4', '2');
             $sheet->setCellValue('D4', '45.0');
 
-            $sheet->setCellValue('A5', '87654321');
-            $sheet->setCellValue('B5', 'Inglés');
+            $sheet->setCellValue('A5', '10000001');
+            $sheet->setCellValue('B5', 'Ingles');
             $sheet->setCellValue('C5', '2');
             $sheet->setCellValue('D5', '60.5');
 

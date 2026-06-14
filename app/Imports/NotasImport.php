@@ -12,6 +12,12 @@ class NotasImport implements ToModel, WithHeadingRow
 {
     private $errores = [];
     private $exitos = 0;
+    private $idGestion;
+
+    public function __construct($idGestion)
+    {
+        $this->idGestion = $idGestion;
+    }
 
     public function model(array $row)
     {
@@ -32,16 +38,65 @@ class NotasImport implements ToModel, WithHeadingRow
                 return null;
             }
 
-            $materia = DB::table('materia')->where('nombre', $nombreMateria)->first();
+            $postulante = DB::table('postulante')->where('id_persona', $persona->id)->first();
+            if (!$postulante) {
+                $this->errores[] = "La persona con Carnet {$ci} no es un postulante.";
+                return null;
+            }
+
+            // Validar que el usuario del postulante esté activo
+            $usuario = DB::table('usuario')->where('id_persona', $persona->id)->first();
+            if (!$usuario || $usuario->estado !== 'Activo') {
+                $this->errores[] = "El usuario del postulante con Carnet {$ci} no está Activo.";
+                return null;
+            }
+
+            // Validar que esté inscrito en la gestión activa
+            $inscripcion = DB::table('postulante_grupo')
+                ->join('grupo', 'grupo.id', '=', 'postulante_grupo.id_grupo')
+                ->where('postulante_grupo.id_postulante', $persona->id)
+                ->where('grupo.id_gestionacademica', $this->idGestion)
+                ->first();
+
+            if (!$inscripcion) {
+                $this->errores[] = "El postulante con Carnet {$ci} no está inscrito en ningún grupo de la gestión activa.";
+                return null;
+            }
+
+            // Buscar materia ignorando mayúsculas, acentos y 's' al final
+            $materiasDb = DB::table('materia')->get();
+            $materia = null;
+            
+            // Función simple para limpiar string
+            $cleanStr = function($str) {
+                $str = mb_strtolower(trim($str), 'UTF-8');
+                $str = str_replace(
+                    ['á', 'é', 'í', 'ó', 'ú', 'ä', 'ë', 'ï', 'ö', 'ü', 'â', 'ê', 'î', 'ô', 'û'],
+                    ['a', 'e', 'i', 'o', 'u', 'a', 'e', 'i', 'o', 'u', 'a', 'e', 'i', 'o', 'u'],
+                    $str
+                );
+                return rtrim($str, 's'); // Quita la 's' final por si escriben Matemáticas en vez de Matemática
+            };
+
+            $searchClean = $cleanStr($nombreMateria);
+
+            foreach ($materiasDb as $mDb) {
+                if ($cleanStr($mDb->nombre) === $searchClean) {
+                    $materia = $mDb;
+                    break;
+                }
+            }
+
             if (!$materia) {
                 $this->errores[] = "Materia {$nombreMateria} no encontrada.";
                 return null;
             }
 
-            // Buscar programacion de esa evaluacion para la materia
+            // Buscar programacion de esa evaluacion para la materia en la gestion activa
             $prog = DB::table('programacion_evaluacion')
                 ->where('id_evaluacion', $evaluacionId)
                 ->where('id_materia', $materia->id)
+                ->where('id_gestionacademica', $this->idGestion)
                 ->first();
 
             if (!$prog) {
@@ -58,9 +113,8 @@ class NotasImport implements ToModel, WithHeadingRow
                 ],
                 [
                     'puntaje_obtenido' => $puntaje,
-                    'estado' => $puntaje >= 51 ? 'Aprobado' : 'Reprobado',
                     'updated_at' => now(),
-                    'created_at' => now(),
+                    // Solo en caso de insert, se asignará el created_at porque updateOrInsert maneja updated_at si existe
                 ]
             );
 

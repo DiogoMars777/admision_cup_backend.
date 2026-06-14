@@ -143,6 +143,9 @@ class AuthController extends Controller
         $userData['telefono'] = $persona ? $persona->telefono : 'N/A';
         $userData['rol'] = $rol;
 
+        $gestionActiva = DB::table('gestion_academica')->where('estado', 'Activo')->first();
+        $userData['has_active_gestion'] = $gestionActiva ? true : false;
+
         return response()->json([
             'access_token' => $token,
             'token_type' => 'Bearer',

@@ -142,12 +142,6 @@ class PostulantePortalController extends Controller
         $estadoAdmision = 'En Proceso';
         if ($examenesTerminados) {
             $estadoAdmision = $todasAprobadas ? 'Aprobado' : 'Reprobado';
-        } else {
-            // Si tiene alguna materia ya reprobada (matemáticamente imposible llegar a 60)
-            $algunaReprobada = collect($materiasData)->contains('estado', 'Reprobado');
-            if ($algunaReprobada) {
-                $estadoAdmision = 'Reprobado';
-            }
         }
 
         return response()->json([

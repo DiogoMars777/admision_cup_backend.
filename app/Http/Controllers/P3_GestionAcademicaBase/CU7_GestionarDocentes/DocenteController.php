@@ -14,12 +14,14 @@ class DocenteController extends Controller
     {
         $query = \App\Models\P3_GestionAcademicaBase\Docente::query()
             ->join('persona', 'docente.id_persona', '=', 'persona.id')
+            ->leftJoin('usuario', 'usuario.id_persona', '=', 'persona.id')
             ->select(
                 'persona.id',
                 'persona.ci',
                 'persona.nombre',
                 'persona.sexo',
                 'persona.telefono',
+                'usuario.email as email',
                 'docente.grado_academico',
                 'docente.experiencia_docente'
             );

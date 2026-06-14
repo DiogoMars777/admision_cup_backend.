@@ -152,6 +152,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/gestiones-academicas/{id}/evaluaciones', [GestionAcademicaController::class, 'getEvaluaciones']);
     Route::put('/gestiones-academicas/{id}/evaluaciones', [GestionAcademicaController::class, 'updateEvaluacion']);
     Route::get('/gestiones-academicas/cups', [GestionAcademicaController::class, 'getCups']);
+    
+    // Rutas para ver postulantes por grupo en gestión académica
+    Route::get('/gestiones-academicas/{id}/postulantes/grupos', [GestionAcademicaController::class, 'getGruposPostulantes']);
+    Route::get('/gestiones-academicas/grupos/{grupoId}/postulantes', [GestionAcademicaController::class, 'getPostulantesPorGrupo']);
+
+    // Rutas de Admisión y Resumen de Carreras
+    Route::get('/gestiones-academicas/{id}/admision/resumen', [GestionAcademicaController::class, 'getResumenAdmision']);
+    Route::post('/gestiones-academicas/{id}/admision/asignar', [GestionAcademicaController::class, 'asignarCarreras']);
 
     // Rutas de Generación de Grupos
     Route::get('/gestiones-academicas/{id}/grupos/resumen', [GrupoGeneradorController::class, 'getResumen']);
@@ -170,6 +178,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/gestiones-academicas/asignaciones-docentes/materias/{materiaId}/docentes', [DocenteAsignadorController::class, 'getDocentesHabilitados']);
     Route::post('/gestiones-academicas/{id}/grupo-materia/{grupoMateriaId}/asignar-docente', [DocenteAsignadorController::class, 'asignarDocente']);
     Route::delete('/gestiones-academicas/{id}/grupo-materia/{grupoMateriaId}/quitar-docente', [DocenteAsignadorController::class, 'quitarDocente']);
+    Route::post('/gestiones-academicas/{id}/asignaciones-docentes/automatica', [DocenteAsignadorController::class, 'asignacionAutomatica']);
 
     // Portal Docente
     Route::get('/docente-portal/dashboard', [\App\Http\Controllers\P3_GestionAcademicaBase\Docentes\DocentePortalController::class, 'getDashboardData']);

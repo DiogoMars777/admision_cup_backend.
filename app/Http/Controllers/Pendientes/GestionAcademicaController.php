@@ -43,7 +43,26 @@ class GestionAcademicaController extends Controller
         ]);
 
         if ($request->estado === 'Activo') {
-            GestionAcademica::where('estado', 'Activo')->update(['estado' => 'Inactivo']);
+            // Obtener gestiones previamente activas
+            $gestionesViejas = GestionAcademica::where('estado', 'Activo')->pluck('id');
+            
+            if ($gestionesViejas->count() > 0) {
+                GestionAcademica::whereIn('id', $gestionesViejas)->update(['estado' => 'Inactivo']);
+                
+                $rolPostulanteId = DB::table('rol')->where('nombre', 'Postulante')->value('id');
+                if ($rolPostulanteId) {
+                    $postulantesViejosIds = DB::table('postulante')
+                        ->whereIn('id_gestionacademica', $gestionesViejas)
+                        ->pluck('id_persona');
+                        
+                    if ($postulantesViejosIds->count() > 0) {
+                        DB::table('usuario')
+                            ->whereIn('id_persona', $postulantesViejosIds)
+                            ->where('id_rol', $rolPostulanteId)
+                            ->update(['estado' => 'Inactivo']);
+                    }
+                }
+            }
         }
 
         $gestion = GestionAcademica::create([
@@ -99,17 +118,55 @@ class GestionAcademicaController extends Controller
             'estado' => 'nullable|string|max:20'
         ]);
 
-        if ($request->estado === 'Activo') {
-            GestionAcademica::where('id', '!=', $id)->update(['estado' => 'Inactivo']);
+        $oldGestion = GestionAcademica::find($id);
+        $nuevoEstado = $request->estado ?? 'Inactivo';
+
+        $rolPostulanteId = DB::table('rol')->where('nombre', 'Postulante')->value('id');
+
+        if ($nuevoEstado === 'Activo') {
+            // Desactivar las demás gestiones
+            $otrasGestiones = GestionAcademica::where('id', '!=', $id)->pluck('id');
+            if ($otrasGestiones->count() > 0) {
+                GestionAcademica::whereIn('id', $otrasGestiones)->update(['estado' => 'Inactivo']);
+                
+                // Desactivar a los postulantes de esas otras gestiones
+                $postulantesOtrasIds = DB::table('postulante')
+                    ->whereIn('id_gestionacademica', $otrasGestiones)
+                    ->pluck('id_persona');
+                
+                if ($postulantesOtrasIds->count() > 0 && $rolPostulanteId) {
+                    DB::table('usuario')
+                        ->whereIn('id_persona', $postulantesOtrasIds)
+                        ->where('id_rol', $rolPostulanteId)
+                        ->update(['estado' => 'Inactivo']);
+                }
+            }
+
+            // Activar a los postulantes de la gestión actual
+            $postulantesIds = DB::table('postulante')->where('id_gestionacademica', $id)->pluck('id_persona');
+            if ($postulantesIds->count() > 0 && $rolPostulanteId) {
+                DB::table('usuario')
+                    ->whereIn('id_persona', $postulantesIds)
+                    ->where('id_rol', $rolPostulanteId)
+                    ->update(['estado' => 'Activo']);
+            }
+        } else if ($nuevoEstado === 'Inactivo') {
+            // Si solo se está desactivando esta gestión actual
+            $postulantesIds = DB::table('postulante')->where('id_gestionacademica', $id)->pluck('id_persona');
+            if ($postulantesIds->count() > 0 && $rolPostulanteId) {
+                DB::table('usuario')
+                    ->whereIn('id_persona', $postulantesIds)
+                    ->where('id_rol', $rolPostulanteId)
+                    ->update(['estado' => 'Inactivo']);
+            }
         }
 
         GestionAcademica::where('id', $id)->update([
             'nombre' => $request->nombre,
-            // 'año' se mantiene o se actualiza si es necesario, pero lo dejamos como estaba
             'id_gestion_cup' => $request->id_gestion_cup,
             'fecha_ini' => $request->fecha_ini,
             'fecha_fin' => $request->fecha_fin,
-            'estado' => $request->estado ?? 'Inactivo',
+            'estado' => $nuevoEstado,
         ]);
 
         return response()->json(['message' => 'Gestión Académica actualizada exitosamente']);
@@ -201,5 +258,309 @@ class GestionAcademicaController extends Controller
         }
 
         return response()->json(['message' => 'Fecha actualizada correctamente']);
+    }
+
+    public function getGruposPostulantes($gestionId)
+    {
+        $grupos = DB::table('grupo')
+            ->where('id_gestionacademica', $gestionId)
+            ->select('id', 'nombre', 'turno', 'modalidad')
+            ->orderBy('nombre')
+            ->get();
+            
+        return response()->json($grupos);
+    }
+
+    public function getPostulantesPorGrupo($grupoId)
+    {
+        $postulantes = DB::table('postulante_grupo')
+            ->join('postulante', 'postulante_grupo.id_postulante', '=', 'postulante.id_persona')
+            ->join('persona', 'postulante.id_persona', '=', 'persona.id')
+            ->where('postulante_grupo.id_grupo', $grupoId)
+            ->select('persona.id', 'persona.nombre', 'persona.ci', 'persona.correo', 'persona.telefono')
+            ->orderBy('persona.nombre')
+            ->get();
+            
+        $materiasGrupo = DB::table('grupo_materia')
+            ->join('materia', 'materia.id', '=', 'grupo_materia.id_materia')
+            ->where('grupo_materia.id_grupo', $grupoId)
+            ->select('materia.id', 'materia.nombre')
+            ->get();
+
+        foreach ($postulantes as $postulante) {
+            $notasMaterias = [];
+            $sumaPromedios = 0;
+            $materiasTerminadas = 0;
+            $aprobadoGeneral = true;
+            $tieneAlgunaNota = false;
+
+            foreach ($materiasGrupo as $materia) {
+                $notas = DB::table('nota')
+                    ->join('programacion_evaluacion', 'programacion_evaluacion.id', '=', 'nota.id_programacion_evaluacion')
+                    ->where('nota.id_postulante', $postulante->id)
+                    ->where('programacion_evaluacion.id_materia', $materia->id)
+                    ->pluck('nota.puntaje_obtenido');
+                
+                $sumaMateria = 0;
+                $notasIngresadas = 0;
+                foreach ($notas as $nota) {
+                    if ($nota !== null) {
+                        $sumaMateria += $nota;
+                        $notasIngresadas++;
+                        $tieneAlgunaNota = true;
+                    }
+                }
+                
+                // Solo si tiene las 3 notas de la materia, calculamos su promedio, de lo contrario es null
+                if ($notasIngresadas == 3) {
+                    $promedioMateria = $sumaMateria / 3;
+                    $materiasTerminadas++;
+                    
+                    if ($promedioMateria < 60) {
+                        $aprobadoGeneral = false;
+                    }
+                } else {
+                    $promedioMateria = null;
+                    $aprobadoGeneral = false; // No puede aprobar si le faltan notas
+                }
+                
+                $nombreLimpio = mb_strtolower(trim($materia->nombre), 'UTF-8');
+                if (strpos($nombreLimpio, 'matem') !== false) $key = 'Matemática';
+                else if (strpos($nombreLimpio, 'ingl') !== false) $key = 'Inglés';
+                else if (strpos($nombreLimpio, 'físic') !== false || strpos($nombreLimpio, 'fisic') !== false) $key = 'Física';
+                else if (strpos($nombreLimpio, 'computaci') !== false) $key = 'Computación';
+                else $key = $materia->nombre;
+
+                $notasMaterias[$key] = $promedioMateria !== null ? round($promedioMateria, 1) : null;
+                if ($promedioMateria !== null) {
+                    $sumaPromedios += $promedioMateria;
+                }
+            }
+
+            $promedioGral = $materiasTerminadas == count($materiasGrupo) && count($materiasGrupo) > 0 
+                ? $sumaPromedios / count($materiasGrupo) 
+                : null;
+            
+            $postulante->notas = $notasMaterias;
+            $postulante->promedio_final = $promedioGral !== null ? round($promedioGral, 1) : null;
+            
+            if ($materiasTerminadas == count($materiasGrupo) && count($materiasGrupo) > 0) {
+                $postulante->estado = $aprobadoGeneral ? 'Aprobado' : 'Reprobado';
+            } else {
+                $postulante->estado = 'En Proceso';
+            }
+        }
+            
+        return response()->json($postulantes);
+    }
+
+    public function getResumenAdmision($id)
+    {
+        $gestion = GestionAcademica::findOrFail($id);
+        
+        $ya_asignados = DB::table('admision')
+            ->where('id_gestionacademica', $id)
+            ->whereIn('estado', ['Aprobado', 'Reprobado', 'Sin Cupo'])
+            ->exists();
+            
+        $carreras = DB::table('carrera')
+            ->leftJoin('cupo_carrera', function($join) use ($id) {
+                $join->on('carrera.id', '=', 'cupo_carrera.id_carrera')
+                     ->where('cupo_carrera.id_gestionacademica', '=', $id);
+            })
+            ->select('carrera.id', 'carrera.nombre', DB::raw('COALESCE(cupo_carrera.cupo_max, 50) as cupo_maximo'))
+            ->get();
+            
+        $resultados = [];
+        
+        foreach ($carreras as $c) {
+            $admitidos = DB::table('admision')
+                ->join('persona', 'admision.id_postulante', '=', 'persona.id')
+                ->where('admision.id_gestionacademica', $id)
+                ->where('admision.id_carrera', $c->id)
+                ->where('admision.estado', 'Aprobado')
+                ->select(
+                    'persona.id', 
+                    'persona.nombre', 
+                    'persona.ci'
+                )
+                ->get();
+                
+            foreach($admitidos as $adm) {
+                $promedio = DB::table('nota')
+                    ->join('programacion_evaluacion', 'nota.id_programacion_evaluacion', '=', 'programacion_evaluacion.id')
+                    ->where('programacion_evaluacion.id_gestionacademica', $id)
+                    ->where('nota.id_postulante', $adm->id)
+                    ->avg('nota.puntaje_obtenido');
+                $adm->promedio = $promedio !== null ? round($promedio, 1) : 0;
+            }
+            
+            $admitidosArr = $admitidos->toArray();
+            usort($admitidosArr, function($a, $b) {
+                return $b->promedio <=> $a->promedio;
+            });
+
+            $resultados[] = [
+                'id_carrera' => $c->id,
+                'carrera' => $c->nombre,
+                'cupo_maximo' => $c->cupo_maximo,
+                'inscritos' => count($admitidosArr),
+                'alumnos' => $admitidosArr
+            ];
+        }
+        
+        $reprobados = DB::table('admision')
+            ->where('id_gestionacademica', $id)
+            ->where('estado', 'Reprobado')
+            ->count();
+            
+        $sin_cupo = DB::table('admision')
+            ->where('id_gestionacademica', $id)
+            ->where('estado', 'Sin Cupo')
+            ->count();
+            
+        return response()->json([
+            'ya_asignados' => $ya_asignados,
+            'resultados' => $resultados,
+            'stats' => [
+                'reprobados' => $reprobados,
+                'sin_cupo' => $sin_cupo
+            ]
+        ]);
+    }
+    
+    public function asignarCarreras($id)
+    {
+        $gestion = GestionAcademica::findOrFail($id);
+        
+        DB::beginTransaction();
+        
+        try {
+            $cuposCarrera = DB::table('cupo_carrera')
+                ->where('id_gestionacademica', $id)
+                ->get();
+                
+            foreach($cuposCarrera as $cc) {
+                DB::table('cupo_carrera')
+                    ->where('id', $cc->id)
+                    ->update(['cupo_disp' => $cc->cupo_max]);
+            }
+
+            $cupos = DB::table('cupo_carrera')
+                ->where('id_gestionacademica', $id)
+                ->get()->keyBy('id_carrera')->toArray();
+
+            DB::table('admision')
+                ->where('id_gestionacademica', $id)
+                ->update(['estado' => 'Registrado']);
+
+            $postulantes = DB::table('postulante')
+                ->where('id_gestionacademica', $id)
+                ->pluck('id_persona');
+
+            $notasPorMateria = DB::table('nota')
+                ->join('programacion_evaluacion', 'nota.id_programacion_evaluacion', '=', 'programacion_evaluacion.id')
+                ->where('programacion_evaluacion.id_gestionacademica', $id)
+                ->select('nota.id_postulante', 'nota.id_materia', DB::raw('AVG(nota.puntaje_obtenido) as promedio_materia'))
+                ->groupBy('nota.id_postulante', 'nota.id_materia')
+                ->get()
+                ->groupBy('id_postulante');
+
+            $postulantesAsignables = [];
+            foreach($postulantes as $pId) {
+                if (!isset($notasPorMateria[$pId])) {
+                    DB::table('admision')
+                        ->where('id_postulante', $pId)
+                        ->where('id_gestionacademica', $id)
+                        ->update(['estado' => 'Reprobado', 'updated_at' => now()]);
+                    continue;
+                }
+                
+                $materias = $notasPorMateria[$pId];
+                $aprobado = true;
+                $suma = 0;
+                
+                foreach($materias as $m) {
+                    $suma += $m->promedio_materia;
+                    if ($m->promedio_materia < 60) {
+                        $aprobado = false;
+                    }
+                }
+                
+                $promedioFinal = $suma / count($materias);
+                
+                if ($aprobado) {
+                    $postulantesAsignables[] = [
+                        'id' => $pId,
+                        'promedio' => round($promedioFinal, 1)
+                    ];
+                } else {
+                    DB::table('admision')
+                        ->where('id_postulante', $pId)
+                        ->where('id_gestionacademica', $id)
+                        ->update(['estado' => 'Reprobado', 'updated_at' => now()]);
+                }
+            }
+
+            usort($postulantesAsignables, function($a, $b) {
+                return $b['promedio'] <=> $a['promedio'];
+            });
+
+            foreach($postulantesAsignables as $pa) {
+                $pId = $pa['id'];
+                
+                $opciones = DB::table('postulante_carrera')
+                    ->where('id_postulante', $pId)
+                    ->orderBy('prioridad', 'asc')
+                    ->pluck('id_carrera')
+                    ->toArray();
+                
+                $asignado = null;
+
+                foreach($opciones as $cId) {
+                    if (isset($cupos[$cId]) && $cupos[$cId]->cupo_disp > 0) {
+                        $asignado = $cId;
+                        $cupos[$cId]->cupo_disp--;
+                        break;
+                    }
+                }
+
+                if (!$asignado) {
+                    foreach($cupos as $cId => $c) {
+                        if ($c->cupo_disp > 0) {
+                            $asignado = $cId;
+                            $cupos[$cId]->cupo_disp--;
+                            break;
+                        }
+                    }
+                }
+
+                if ($asignado) {
+                    DB::table('admision')
+                        ->where('id_postulante', $pId)
+                        ->where('id_gestionacademica', $id)
+                        ->update(['estado' => 'Aprobado', 'id_carrera' => $asignado, 'updated_at' => now()]);
+                } else {
+                    DB::table('admision')
+                        ->where('id_postulante', $pId)
+                        ->where('id_gestionacademica', $id)
+                        ->update(['estado' => 'Sin Cupo', 'updated_at' => now()]);
+                }
+            }
+
+            foreach($cupos as $cId => $c) {
+                DB::table('cupo_carrera')
+                    ->where('id_carrera', $cId)
+                    ->where('id_gestionacademica', $id)
+                    ->update(['cupo_disp' => $c->cupo_disp]);
+            }
+
+            DB::commit();
+            return response()->json(['message' => 'Admisión y asignación de carreras completada con éxito.']);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Error al asignar carreras: ' . $e->getMessage()], 500);
+        }
     }
 }

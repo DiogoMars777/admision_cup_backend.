@@ -33,13 +33,48 @@ class DemoDataSeeder extends Seeder
         $rolPostulanteId = DB::table('rol')->where('nombre', 'Postulante')->value('id');
         $rolDocenteId = DB::table('rol')->where('nombre', 'Docente')->value('id');
         $rolAdminId = DB::table('rol')->where('nombre', 'Administrador')->value('id');
+        $rolSuperAdminId = DB::table('rol')->where('nombre', 'Super Admin')->value('id');
+
+        // ═══════════════════════════════════════════════════════════
+        // 1.5. SUPER ADMINISTRADOR
+        // ═══════════════════════════════════════════════════════════
+        $superAdminPersonaId = DB::table('persona')->where('correo', 'diogomars2020@gmail.com')->value('id');
+        if (!$superAdminPersonaId) {
+            $superAdminPersonaId = DB::table('persona')->insertGetId([
+                'ci' => '12345678',
+                'nombre' => 'Diogo Mars',
+                'sexo' => 'M',
+                'telefono' => '70000000',
+                'correo' => 'diogomars2020@gmail.com',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            DB::table('super_administrador')->insert([
+                'id_persona' => $superAdminPersonaId,
+                'cargo' => 'Gerente de Sistemas',
+                'estado' => 'Activo',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            DB::table('usuario')->insert([
+                'id_persona' => $superAdminPersonaId,
+                'id_rol' => $rolSuperAdminId,
+                'email' => 'diogomars2020@gmail.com',
+                'password' => Hash::make('admin123'),
+                'estado' => 'Activo',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
 
         // ═══════════════════════════════════════════════════════════
         // 2. CARRERAS
         // ═══════════════════════════════════════════════════════════
         $carrerasNombres = [
-            'Ingeniería de Sistemas', 'Ingeniería Informática', 'Medicina',
-            'Derecho', 'Arquitectura', 'Contaduría Pública',
+            'Ingeniería en Sistemas', 'Ingeniería en Informática', 
+            'Ingeniería en Redes y Telecomunicaciones', 'Ingeniería en Robótica'
         ];
         $carreraIds = [];
         foreach ($carrerasNombres as $carrera) {
@@ -106,7 +141,7 @@ class DemoDataSeeder extends Seeder
         // ═══════════════════════════════════════════════════════════
         // 5. MATERIAS
         // ═══════════════════════════════════════════════════════════
-        $materias = ['Matematica', 'Ingles', 'Fisica', 'Computacion'];
+        $materias = ['Matemática', 'Física', 'Computación', 'Inglés'];
         $materiaIds = [];
         foreach ($materias as $materia) {
             $id = DB::table('materia')->where('nombre', $materia)->value('id');
@@ -126,13 +161,13 @@ class DemoDataSeeder extends Seeder
         // 6. AULAS
         // ═══════════════════════════════════════════════════════════
         $aulaIds = [];
-        for ($i = 1; $i <= 10; $i++) {
+        for ($i = 1; $i <= 30; $i++) {
             $nroAula = 'A-' . str_pad($i, 3, '0', STR_PAD_LEFT);
             $id = DB::table('aula')->where('aula_nro', $nroAula)->value('id');
             if (!$id) {
                 $id = DB::table('aula')->insertGetId([
                     'aula_nro' => $nroAula,
-                    'capacidad' => $faker->numberBetween(30, 60),
+                    'capacidad' => 70,
                     'tipo_aula' => $faker->randomElement(['Teórica', 'Laboratorio']),
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -176,12 +211,17 @@ class DemoDataSeeder extends Seeder
                 ->where('id_gestionacademica', $gestionId)
                 ->exists();
             if (!$existeCupo) {
-                $cupoMax = $faker->numberBetween(40, 100);
+                $cupoMax = 100;
+                if (str_contains(strtolower($carreraNombre), 'sistemas')) $cupoMax = 100;
+                elseif (str_contains(strtolower($carreraNombre), 'informática')) $cupoMax = 130;
+                elseif (str_contains(strtolower($carreraNombre), 'redes')) $cupoMax = 150;
+                elseif (str_contains(strtolower($carreraNombre), 'robótica')) $cupoMax = 150;
+                
                 DB::table('cupo_carrera')->insert([
                     'id_carrera' => $carreraId,
                     'id_gestionacademica' => $gestionId,
                     'cupo_max' => $cupoMax,
-                    'cupo_disp' => $faker->numberBetween(10, $cupoMax),
+                    'cupo_disp' => $cupoMax,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
@@ -197,9 +237,10 @@ class DemoDataSeeder extends Seeder
         $carrerasArray = array_values($carreraIds);
         $carrerasNombresArray = array_keys($carreraIds);
         $modalidadesArray = array_values($modalidadIds);
+        $turnos = ['Mañana', 'Tarde', 'Noche'];
 
-        for ($i = 0; $i < 10; $i++) {
-            $ci = $faker->unique()->randomNumber(8, true);
+        for ($i = 0; $i < 500; $i++) {
+            $ci = str_pad(10000000 + $i, 8, '0', STR_PAD_LEFT);
             $correo = "postulante{$i}@cup.edu.bo";
             $personaId = DB::table('persona')->insertGetId([
                 'ci' => $ci,
@@ -216,7 +257,7 @@ class DemoDataSeeder extends Seeder
 
             DB::table('postulante')->insert([
                 'id_persona' => $personaId,
-                'id_gestionacademica' => ($i < 5) ? $gestionId : null,
+                'id_gestionacademica' => $gestionId,
                 'fecha_nac' => $faker->dateTimeBetween('-25 years', '-17 years')->format('Y-m-d'),
                 'direccion' => $faker->address,
                 'colegio' => 'Colegio ' . $faker->company,
@@ -258,12 +299,12 @@ class DemoDataSeeder extends Seeder
 
 
 
-            if ($i < 5) {
+            if ($i < 499) {
                 DB::table('usuario')->insert([
                     'id_persona' => $personaId,
                     'id_rol' => $rolPostulanteId,
                     'email' => $correo,
-                    'password' => Hash::make($ci),
+                    'password' => Hash::make($ci, ['rounds' => 4]),
                     'estado' => 'Activo',
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -274,13 +315,13 @@ class DemoDataSeeder extends Seeder
         }
 
         // ═══════════════════════════════════════════════════════════
-        // 11. DOCENTES (10) + docente_materia + docente_especialidad
+        // 11. DOCENTES (15) desde Aspirantes + Postulaciones
         // ═══════════════════════════════════════════════════════════
         $docenteIds = [];
         $especialidadIds = DB::table('especialidad')->pluck('id')->toArray();
         $materiaIdsArray = array_values($materiaIds);
 
-        for ($i = 0; $i < 10; $i++) {
+        for ($i = 1; $i <= 15; $i++) {
             $ci = $faker->unique()->randomNumber(8, true);
             $correo = "docente{$i}@cup.edu.bo";
             $personaId = DB::table('persona')->insertGetId([
@@ -293,6 +334,32 @@ class DemoDataSeeder extends Seeder
                 'updated_at' => now(),
             ]);
 
+            // Crear como aspirante primero
+            DB::table('aspirante_docente')->insert([
+                'id_persona' => $personaId,
+                'fecha_registro' => now(),
+                'grado_academico' => $faker->randomElement(['Licenciatura', 'Maestría', 'Doctorado']),
+                'experiencia' => $faker->numberBetween(1, 20),
+                'estado' => 'Activo',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // Asignar de 1 a 3 postulaciones (materias)
+            $materiasPostuladas = $faker->randomElements($materiaIdsArray, $faker->numberBetween(1, min(3, count($materiaIdsArray))));
+            foreach ($materiasPostuladas as $matId) {
+                DB::table('postulacion_docente')->insert([
+                    'id_aspirante_docente' => $personaId,
+                    'id_materia' => $matId,
+                    'fecha_postulacion' => now(),
+                    'estado' => 'Aprobado',
+                    'observacion' => 'Aprobado automáticamente en seeder',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
+            // Convertirlo a Docente oficial
             DB::table('docente')->insert([
                 'id_persona' => $personaId,
                 'grado_academico' => $faker->randomElement(['Licenciatura', 'Maestría', 'Doctorado']),
@@ -301,9 +368,8 @@ class DemoDataSeeder extends Seeder
                 'updated_at' => now(),
             ]);
 
-            // Asignar 1-2 materias al docente
-            $materiasDocente = $faker->randomElements($materiaIdsArray, $faker->numberBetween(1, 2));
-            foreach ($materiasDocente as $matId) {
+            // Asignarle en docente_materia las mismas materias que postuló
+            foreach ($materiasPostuladas as $matId) {
                 DB::table('docente_materia')->updateOrInsert(
                     ['id_docente' => $personaId, 'id_materia' => $matId],
                     ['created_at' => now(), 'updated_at' => now()]
@@ -323,7 +389,7 @@ class DemoDataSeeder extends Seeder
                 'id_persona' => $personaId,
                 'id_rol' => $rolDocenteId,
                 'email' => $correo,
-                'password' => Hash::make($ci),
+                'password' => Hash::make($ci, ['rounds' => 4]),
                 'estado' => 'Activo',
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -337,17 +403,28 @@ class DemoDataSeeder extends Seeder
         // 13. REQUISITOS + POSTULANTE_REQUISITO
         // ═══════════════════════════════════════════════════════════
         $reqsBase = [
-            ['nombre' => 'Fotocopia de CI', 'desc' => 'Documento de identidad legible', 'tipo' => 'Postulante'],
-            ['nombre' => 'Título Bachiller', 'desc' => 'Título legalizado', 'tipo' => 'Postulante'],
-            ['nombre' => 'Certificado de nacimiento', 'desc' => 'Original y actualizado', 'tipo' => 'Postulante'],
-            ['nombre' => 'Fotografía actualizada', 'desc' => 'Fondo rojo 4x4', 'tipo' => 'Postulante'],
-            ['nombre' => 'Formulario de inscripción', 'desc' => 'Firmado por el postulante', 'tipo' => 'Postulante'],
-            ['nombre' => 'Título Académico', 'desc' => 'Licenciatura o superior', 'tipo' => 'Docente'],
-            ['nombre' => 'Experiencia Docente', 'desc' => 'Mínimo 2 años de experiencia', 'tipo' => 'Docente'],
-            ['nombre' => 'Examen de Suficiencia', 'desc' => 'Aprobación del examen', 'tipo' => 'Docente'],
-            ['nombre' => 'Syllabus de la Materia', 'desc' => 'Plan de estudios detallado', 'tipo' => 'Materia'],
-            ['nombre' => 'Material de Laboratorio', 'desc' => 'Equipamiento necesario', 'tipo' => 'Materia'],
-            ['nombre' => 'Bibliografía Base', 'desc' => 'Libros y referencias principales', 'tipo' => 'Materia'],
+            // Postulantes
+            ['nombre' => 'Original y copia del título de bachiller', 'desc' => 'Título de bachiller', 'tipo' => 'Postulante'],
+            ['nombre' => 'Fotocopia del carnet de identidad', 'desc' => 'Documento de identidad legible', 'tipo' => 'Postulante'],
+            ['nombre' => 'Formulario de preinscripción', 'desc' => 'Formulario de preinscripción', 'tipo' => 'Postulante'],
+            ['nombre' => 'Comprobante de pago', 'desc' => 'Comprobante de pago original', 'tipo' => 'Postulante'],
+            ['nombre' => 'Libreta o certificado de último año de secundaria', 'desc' => 'Libreta o certificado de notas', 'tipo' => 'Postulante'],
+            
+            // Materias Específicos
+            ['nombre' => 'Título relacionado con Matemática o áreas afines', 'desc' => 'Matemática', 'tipo' => 'Materia', 'materia_vinculada' => 'Matemática'],
+            ['nombre' => 'Certificado de capacitación en Matemática', 'desc' => 'Matemática', 'tipo' => 'Materia', 'materia_vinculada' => 'Matemática'],
+            ['nombre' => 'Título relacionado con Física o áreas afines', 'desc' => 'Física', 'tipo' => 'Materia', 'materia_vinculada' => 'Física'],
+            ['nombre' => 'Certificado de capacitación en Física', 'desc' => 'Física', 'tipo' => 'Materia', 'materia_vinculada' => 'Física'],
+            ['nombre' => 'Título relacionado con Informática, Sistemas o Computación', 'desc' => 'Computación', 'tipo' => 'Materia', 'materia_vinculada' => 'Computación'],
+            ['nombre' => 'Certificado de capacitación en Computación', 'desc' => 'Computación', 'tipo' => 'Materia', 'materia_vinculada' => 'Computación'],
+            ['nombre' => 'Título o certificación en Inglés', 'desc' => 'Inglés', 'tipo' => 'Materia', 'materia_vinculada' => 'Inglés'],
+            ['nombre' => 'Certificado de nivel de Inglés', 'desc' => 'Inglés', 'tipo' => 'Materia', 'materia_vinculada' => 'Inglés'],
+            
+            // Requisitos generales de materia
+            ['nombre' => 'Experiencia mínima de 3 años', 'desc' => 'General', 'tipo' => 'Materia', 'materia_vinculada' => 'Todas'],
+            ['nombre' => 'Curriculum Vitae', 'desc' => 'General', 'tipo' => 'Materia', 'materia_vinculada' => 'Todas'],
+            ['nombre' => 'Fotocopia de C.I.', 'desc' => 'General', 'tipo' => 'Materia', 'materia_vinculada' => 'Todas'],
+            ['nombre' => 'Certificado de estudios superiores', 'desc' => 'General', 'tipo' => 'Materia', 'materia_vinculada' => 'Todas'],
         ];
 
         $adminPersonaId = DB::table('super_administrador')->value('id_persona') ?? 1;
@@ -355,7 +432,8 @@ class DemoDataSeeder extends Seeder
         $reqPostulanteIds = [];
         $reqDocenteIds = [];
         $reqMateriaIds = [];
-        
+        $reqMateriaMappings = []; // Guarda a qué materias corresponde cada id
+
         foreach ($reqsBase as $req) {
             $reqId = DB::table('requisito')->insertGetId([
                 'id_abministrador' => $adminPersonaId,
@@ -373,6 +451,9 @@ class DemoDataSeeder extends Seeder
                 $reqDocenteIds[] = $reqId;
             } else {
                 $reqMateriaIds[] = $reqId;
+                if (isset($req['materia_vinculada'])) {
+                    $reqMateriaMappings[$reqId] = $req['materia_vinculada'];
+                }
             }
         }
 
@@ -382,16 +463,14 @@ class DemoDataSeeder extends Seeder
                 $estado = 'Pendiente';
                 $observacion = '';
 
-                if ($index < 5) {
-                    // Los primeros 5 son los que van a tener Pago, por ende sus requisitos están completos
+                if ($index < 499) {
+                    // Los primeros 499 tienen todo completo (incluyendo su pago)
                     $estado = 'Entregado';
                     $observacion = '';
                 } else {
-                    // Los demás tienen estados variados (Pendiente, etc.)
-                    $rand = rand(0, 2);
-                    if ($rand == 0) $estado = 'Entregado';
-                    else if ($rand == 1) { $estado = 'Pendiente'; $observacion = 'Documento ilegible'; }
-                    else { $estado = 'Pendiente'; $observacion = 'Falta firma'; }
+                    // Los últimos 1 no han entregado documentos (o están observados)
+                    $estado = 'Pendiente';
+                    $observacion = 'Documento faltante o ilegible';
                 }
 
                 DB::table('postulante_requisito')->insert([
@@ -409,7 +488,7 @@ class DemoDataSeeder extends Seeder
         // ═══════════════════════════════════════════════════════════
         // 14. COMPROBANTES + PAGOS
         // ═══════════════════════════════════════════════════════════
-        for ($i = 0; $i < 5; $i++) {
+        for ($i = 0; $i < 499; $i++) {
             $comprobanteId = DB::table('comprobante')->insertGetId([
                 'nro_comprobante' => 'COMP-' . str_pad($i + 1, 5, '0', STR_PAD_LEFT),
                 'fecha_emision' => $faker->dateTimeBetween('-2 months', 'now')->format('Y-m-d'),
@@ -461,8 +540,8 @@ class DemoDataSeeder extends Seeder
             }
         }
 
-        // Asignar admision y notas a los primeros 5 postulantes (los que tienen pago)
-        for ($i = 0; $i < 5; $i++) {
+        // Asignar admision y notas a los primeros 499 postulantes (los que tienen pago)
+        for ($i = 0; $i < 499; $i++) {
             $postId = $postulanteIds[$i];
             
             // Asumiendo que eligen la primera carrera
@@ -477,7 +556,6 @@ class DemoDataSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
-
             // 2. Generar Notas
             $programaciones = DB::table('programacion_evaluacion')
                 ->where('id_gestionacademica', $gestionId)
@@ -488,66 +566,38 @@ class DemoDataSeeder extends Seeder
                     'id_postulante' => $postId,
                     'id_programacion_evaluacion' => $prog->id,
                     'id_materia' => $prog->id_materia,
-                    'puntaje_obtenido' => $faker->randomFloat(2, 30, 100),
-                    'estado' => $faker->randomElement(['Aprobado', 'Reprobado']),
+                    'puntaje_obtenido' => null,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
             }
+
         }
 
         // ═══════════════════════════════════════════════════════════
         // 16. MATERIA_REQUISITO
         // ═══════════════════════════════════════════════════════════
-        $materiasReq = array_slice($materiaIdsArray, 0, 5);
-        foreach ($materiasReq as $matId) {
+        $materiasDB = DB::table('materia')->get();
+        foreach ($materiasDB as $mat) {
             foreach ($reqMateriaIds as $reqId) {
-                DB::table('materia_requisito')->updateOrInsert(
-                    ['id_materia' => $matId, 'id_requisito' => $reqId],
-                    [
-                        'obligatorio' => true,
-                        'estado' => 'Activo',
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]
-                );
+                $vinculo = $reqMateriaMappings[$reqId] ?? null;
+                
+                // Solo insertamos si el vínculo es "Todas" o coincide con el nombre de la materia
+                if ($vinculo === 'Todas' || $vinculo === $mat->nombre) {
+                    DB::table('materia_requisito')->updateOrInsert(
+                        ['id_materia' => $mat->id, 'id_requisito' => $reqId],
+                        [
+                            'obligatorio' => true,
+                            'estado' => 'Activo',
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]
+                    );
+                }
             }
         }
 
-        // ═══════════════════════════════════════════════════════════
-        // 17. ASPIRANTES A DOCENTE
-        // ═══════════════════════════════════════════════════════════
-        for ($i = 1; $i <= 3; $i++) {
-            $personaId = DB::table('persona')->insertGetId([
-                'ci' => $faker->unique()->randomNumber(8, true),
-                'nombre' => $faker->name,
-                'sexo' => $faker->randomElement(['M', 'F']),
-                'telefono' => $faker->phoneNumber,
-                'correo' => "aspirante{$i}@cup.edu.bo",
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
 
-            DB::table('aspirante_docente')->insert([
-                'id_persona' => $personaId,
-                'fecha_registro' => now(),
-                'grado_academico' => $faker->randomElement(['Licenciatura', 'Maestría']),
-                'experiencia' => $faker->numberBetween(0, 5),
-                'estado' => 'Activo',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-
-            DB::table('usuario')->insert([
-                'id_persona' => $personaId,
-                'id_rol' => $rolPostulanteId,
-                'email' => "aspirante{$i}@cup.edu.bo",
-                'password' => Hash::make('password123'),
-                'estado' => 'Activo',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
 
         $this->command->info('✅ DemoDataSeeder completo: Roles, Carreras, Modalidades, Postulantes, Docentes, Grupos, Horarios, Requisitos (Postulante y Docente), Aspirantes.');
     }
