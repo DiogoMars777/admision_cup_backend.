@@ -12,6 +12,10 @@ class Administrativo extends Model
     protected $table = 'administrativo';
 
     protected $fillable = [
-        'id_persona', 'area', 'cargo', 'estado'
+        'id_persona', 'area', 'cargo', 'estado', 'permisos'
+    ];
+
+    protected $casts = [
+        'permisos' => 'array',
     ];
 }

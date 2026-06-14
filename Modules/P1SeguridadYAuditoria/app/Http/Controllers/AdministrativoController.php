@@ -40,6 +40,7 @@ class AdministrativoController extends Controller
                 'administrativo.area',
                 'administrativo.cargo',
                 'administrativo.estado',
+                'administrativo.permisos',
                 'persona.id as id_persona',
                 'persona.ci',
                 'persona.nombre',
@@ -71,7 +72,8 @@ class AdministrativoController extends Controller
             'correo' => 'required|email',
             'tipo' => 'required|string',
             'cargo' => 'required|string|max:150',
-            'password' => 'required|string|min:6'
+            'password' => 'required|string|min:6',
+            'permisos' => 'nullable|array'
         ]);
 
         DB::beginTransaction();
@@ -119,6 +121,7 @@ class AdministrativoController extends Controller
                     'area' => $request->area ?? 'General',
                     'cargo' => $request->cargo,
                     'estado' => 'Activo',
+                    'permisos' => isset($request->permisos) ? json_encode($request->permisos) : json_encode([]),
                     'created_at' => now(),
                     'updated_at' => now()
                 ]);
@@ -139,6 +142,7 @@ class AdministrativoController extends Controller
             'correo' => 'required|email',
             'tipo' => 'required|string',
             'cargo' => 'required|string|max:150',
+            'permisos' => 'nullable|array'
         ]);
 
         DB::beginTransaction();
@@ -185,6 +189,7 @@ class AdministrativoController extends Controller
                 Administrativo::where('id_persona', $personaId)->update([
                     'cargo' => $request->cargo,
                     'area' => $request->area ?? 'General',
+                    'permisos' => isset($request->permisos) ? json_encode($request->permisos) : json_encode([]),
                     'updated_at' => now()
                 ]);
             }

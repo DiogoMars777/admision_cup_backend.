@@ -143,6 +143,10 @@ class AuthController extends Controller
         $userData['telefono'] = $persona ? $persona->telefono : 'N/A';
         $userData['rol'] = $rol;
 
+        // Fetch permisos from administrativo table
+        $administrativo = \Modules\P1SeguridadYAuditoria\Models\Administrativo::where('id_persona', $user->id_persona)->first();
+        $userData['permisos'] = $administrativo && $administrativo->permisos ? (is_string($administrativo->permisos) ? json_decode($administrativo->permisos) : $administrativo->permisos) : [];
+
         $gestionActiva = DB::table('gestion_academica')->where('estado', 'Activo')->first();
         $userData['has_active_gestion'] = $gestionActiva ? true : false;
 
