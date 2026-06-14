@@ -58,6 +58,14 @@ class DemoDataSeeder extends Seeder
                 'updated_at' => now(),
             ]);
 
+            DB::table('administrativo')->insert([
+                'id_persona' => $superAdminPersonaId,
+                'cargo' => 'Gerente de Sistemas',
+                'estado' => 'Activo',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
             DB::table('usuario')->insert([
                 'id_persona' => $superAdminPersonaId,
                 'id_rol' => $rolSuperAdminId,
@@ -478,7 +486,7 @@ class DemoDataSeeder extends Seeder
                     'id_requisito' => $reqId,
                     'fecha_asignacion' => now()->format('Y-m-d'),
                     'estado' => $estado,
-                    'observacion' => $observacion,
+                    'observacion' => $observacion !== '' ? $observacion : 'Validado correctamente en seeder',
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
@@ -597,7 +605,26 @@ class DemoDataSeeder extends Seeder
             }
         }
 
-
+        // ═══════════════════════════════════════════════════════════
+        // 17. LLENAR CHECKBOXES (Aspirante_Requisito) PARA LOS DOCENTES APROBADOS
+        // ═══════════════════════════════════════════════════════════
+        $postulacionesAprobadas = DB::table('postulacion_docente')->where('estado', 'Aprobado')->get();
+        foreach ($postulacionesAprobadas as $post) {
+            $requisitosObligatorios = DB::table('materia_requisito')->where('id_materia', $post->id_materia)->get();
+            foreach ($requisitosObligatorios as $req) {
+                DB::table('aspirante_requisito')->insert([
+                    'id_postulacion_docente' => $post->id,
+                    'id_materia_requisito' => $req->id,
+                    'cumple' => true,
+                    'fecha_revision' => now(),
+                    'estado' => 'Cumplido',
+                    'id_administrativo' => $adminPersonaId,
+                    'observacion' => 'Validado automáticamente en seeder',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
 
         $this->command->info('✅ DemoDataSeeder completo: Roles, Carreras, Modalidades, Postulantes, Docentes, Grupos, Horarios, Requisitos (Postulante y Docente), Aspirantes.');
     }
