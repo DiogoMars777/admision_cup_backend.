@@ -41,9 +41,23 @@ class AuditLogMiddleware
             elseif (strpos($path, 'requisito') !== false) $modulo = 'Requisitos';
             elseif (strpos($path, 'usuario') !== false) $modulo = 'Usuarios';
             elseif (strpos($path, 'rol') !== false) $modulo = 'Roles';
+            elseif (strpos($path, 'gestion') !== false) $modulo = 'Gestiones Académicas';
+            elseif (strpos($path, 'carrera') !== false) $modulo = 'Carreras';
+            elseif (strpos($path, 'administrativo') !== false) $modulo = 'Administrativos';
 
             $descripcion = "Operación $accion en endpoint: /$path";
             
+            // Intentar extraer datos descriptivos del request
+            $nombres = [];
+            if ($request->input('nombre')) $nombres[] = "Nombre: " . $request->input('nombre');
+            if ($request->input('nombres')) $nombres[] = "Nombres: " . $request->input('nombres');
+            if ($request->input('carnet')) $nombres[] = "CI: " . $request->input('carnet');
+            if ($request->input('email')) $nombres[] = "Email: " . $request->input('email');
+            if ($request->input('sigla')) $nombres[] = "Sigla: " . $request->input('sigla');
+            if ($request->input('codigo')) $nombres[] = "Código: " . $request->input('codigo');
+            
+            $detalleInfo = count($nombres) > 0 ? " [" . implode(', ', $nombres) . "]" : "";
+
             // Lógica para descripciones más humanas
             if (preg_match('/postulantes\/(\d+)\/pagar/', $path, $matches)) {
                 $descripcion = "Registró el pago del postulante (ID: " . $matches[1] . ")";
@@ -57,19 +71,21 @@ class AuditLogMiddleware
                 $descripcion = "Generó y guardó los grupos para la gestión académica (ID: " . $matches[1] . ")";
             } elseif (preg_match('/gestiones-academicas\/(\d+)\/horarios\/generar/', $path, $matches)) {
                 $descripcion = "Generó y guardó los horarios automáticos para la gestión (ID: " . $matches[1] . ")";
+            } elseif (preg_match('/gestiones-academicas\/(\d+)\/admision\/asignar/', $path, $matches)) {
+                $descripcion = "Calculó la admisión y asignó carreras a los postulantes para la gestión (ID: " . $matches[1] . ")";
             } elseif (preg_match('/gestiones-academicas\/(\d+)/', $path, $matches) && $accion !== 'Crear') {
-                $descripcion = ($accion === 'Actualizar' ? "Actualizó" : "Eliminó") . " la gestión académica (ID: " . $matches[1] . ")";
+                $descripcion = ($accion === 'Actualizar' ? "Actualizó" : "Eliminó") . " la gestión académica (ID: " . $matches[1] . ")" . $detalleInfo;
             } elseif (preg_match('/usuarios\/(\d+)\/toggle-status/', $path, $matches)) {
                 $descripcion = "Cambió el estado (Activó/Desactivó) del usuario (ID: " . $matches[1] . ")";
             } elseif (preg_match('/([a-zA-Z\-]+)\/(\d+)/', $path, $matches) && $accion !== 'Crear') {
                 $entidad = str_replace('-', ' ', $matches[1]);
-                $descripcion = ($accion === 'Actualizar' ? "Actualizó" : "Eliminó") . " un registro en $entidad (ID: " . $matches[2] . ")";
+                $descripcion = ($accion === 'Actualizar' ? "Actualizó" : "Eliminó") . " un registro en $entidad (ID: " . $matches[2] . ")" . $detalleInfo;
             } else {
                 // Fallback genérico más bonito
                 $entidad = strtolower($modulo);
-                if ($accion === 'Crear') $descripcion = "Registró un nuevo dato en el módulo de $entidad";
-                if ($accion === 'Actualizar') $descripcion = "Actualizó un registro en el módulo de $entidad";
-                if ($accion === 'Eliminar') $descripcion = "Eliminó un registro en el módulo de $entidad";
+                if ($accion === 'Crear') $descripcion = "Creó un nuevo registro$detalleInfo en el módulo de $entidad";
+                if ($accion === 'Actualizar') $descripcion = "Actualizó un registro$detalleInfo en el módulo de $entidad";
+                if ($accion === 'Eliminar') $descripcion = "Eliminó un registro$detalleInfo en el módulo de $entidad";
             }
 
             DB::table('bitacora')->insert([
