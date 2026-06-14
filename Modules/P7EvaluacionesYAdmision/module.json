@@ -1,0 +1,11 @@
+{
+    "name": "P7EvaluacionesYAdmision",
+    "alias": "p7evaluacionesyadmision",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\P7EvaluacionesYAdmision\\Providers\\P7EvaluacionesYAdmisionServiceProvider"
+    ],
+    "files": []
+}

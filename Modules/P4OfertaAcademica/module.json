@@ -1,0 +1,11 @@
+{
+    "name": "P4OfertaAcademica",
+    "alias": "p4ofertaacademica",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\P4OfertaAcademica\\Providers\\P4OfertaAcademicaServiceProvider"
+    ],
+    "files": []
+}

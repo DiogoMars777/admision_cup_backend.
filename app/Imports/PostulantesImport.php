@@ -2,8 +2,8 @@
 
 namespace App\Imports;
 
-use App\Models\Shared\Persona;
-use App\Models\P1_GestionDeSeguridadYAcceso\Usuario;
+use Modules\P1SeguridadYAuditoria\Models\Persona;
+use Modules\P1SeguridadYAuditoria\Models\Usuario;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\ToModel;
@@ -39,7 +39,7 @@ class PostulantesImport implements ToModel, WithHeadingRow
                     'correo' => $row['correo'] ?? ($ci . '@postulante.edu.bo')
                 ]);
 
-                $rolId = \App\Models\P1_GestionDeSeguridadYAcceso\Rol::where('nombre', 'Postulante')->value('id') ?? 5;
+                $rolId = \Modules\P1SeguridadYAuditoria\Models\Rol::where('nombre', 'Postulante')->value('id') ?? 5;
 
                 // Asignar cuenta de usuario
                 Usuario::create([

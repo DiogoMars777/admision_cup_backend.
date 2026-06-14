@@ -1,0 +1,30 @@
+{
+    "name": "nwidart/p2postulantesyrequisitos",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\P2PostulantesYRequisitos\\": "app/",
+            "Modules\\P2PostulantesYRequisitos\\Database\\Factories\\": "database/factories/",
+            "Modules\\P2PostulantesYRequisitos\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\P2PostulantesYRequisitos\\Tests\\": "tests/"
+        }
+    }
+}

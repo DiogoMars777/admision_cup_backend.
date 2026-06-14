@@ -1,0 +1,11 @@
+{
+    "name": "P5RecursosAcademicos",
+    "alias": "p5recursosacademicos",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\P5RecursosAcademicos\\Providers\\P5RecursosAcademicosServiceProvider"
+    ],
+    "files": []
+}

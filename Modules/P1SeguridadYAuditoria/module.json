@@ -1,0 +1,11 @@
+{
+    "name": "P1SeguridadYAuditoria",
+    "alias": "p1seguridadyauditoria",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\P1SeguridadYAuditoria\\Providers\\P1SeguridadYAuditoriaServiceProvider"
+    ],
+    "files": []
+}

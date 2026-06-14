@@ -1,0 +1,30 @@
+{
+    "name": "nwidart/p5recursosacademicos",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\P5RecursosAcademicos\\": "app/",
+            "Modules\\P5RecursosAcademicos\\Database\\Factories\\": "database/factories/",
+            "Modules\\P5RecursosAcademicos\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\P5RecursosAcademicos\\Tests\\": "tests/"
+        }
+    }
+}

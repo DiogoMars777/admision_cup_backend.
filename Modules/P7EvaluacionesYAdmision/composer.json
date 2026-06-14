@@ -1,0 +1,30 @@
+{
+    "name": "nwidart/p7evaluacionesyadmision",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\P7EvaluacionesYAdmision\\": "app/",
+            "Modules\\P7EvaluacionesYAdmision\\Database\\Factories\\": "database/factories/",
+            "Modules\\P7EvaluacionesYAdmision\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\P7EvaluacionesYAdmision\\Tests\\": "tests/"
+        }
+    }
+}

@@ -3,7 +3,7 @@
 namespace App\Imports;
 
 use Illuminate\Support\Facades\DB;
-use App\Models\Shared\Persona;
+use Modules\P1SeguridadYAuditoria\Models\Persona;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Exception;

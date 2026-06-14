@@ -1,0 +1,30 @@
+{
+    "name": "nwidart/p1seguridadyauditoria",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\P1SeguridadYAuditoria\\": "app/",
+            "Modules\\P1SeguridadYAuditoria\\Database\\Factories\\": "database/factories/",
+            "Modules\\P1SeguridadYAuditoria\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\P1SeguridadYAuditoria\\Tests\\": "tests/"
+        }
+    }
+}

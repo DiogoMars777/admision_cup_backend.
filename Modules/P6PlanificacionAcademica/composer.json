@@ -1,0 +1,30 @@
+{
+    "name": "nwidart/p6planificacionacademica",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\P6PlanificacionAcademica\\": "app/",
+            "Modules\\P6PlanificacionAcademica\\Database\\Factories\\": "database/factories/",
+            "Modules\\P6PlanificacionAcademica\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\P6PlanificacionAcademica\\Tests\\": "tests/"
+        }
+    }
+}

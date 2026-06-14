@@ -1,0 +1,11 @@
+{
+    "name": "P2PostulantesYRequisitos",
+    "alias": "p2postulantesyrequisitos",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\P2PostulantesYRequisitos\\Providers\\P2PostulantesYRequisitosServiceProvider"
+    ],
+    "files": []
+}

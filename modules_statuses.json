@@ -1,0 +1,10 @@
+{
+    "P1SeguridadYAuditoria": true,
+    "P2PostulantesYRequisitos": true,
+    "P3GestionDePagos": true,
+    "P4OfertaAcademica": true,
+    "P5RecursosAcademicos": true,
+    "P6PlanificacionAcademica": true,
+    "P7EvaluacionesYAdmision": true,
+    "P8Reportes": true
+}

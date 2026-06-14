@@ -1,0 +1,11 @@
+{
+    "name": "P3GestionDePagos",
+    "alias": "p3gestiondepagos",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\P3GestionDePagos\\Providers\\P3GestionDePagosServiceProvider"
+    ],
+    "files": []
+}

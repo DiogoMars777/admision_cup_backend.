@@ -1,0 +1,11 @@
+{
+    "name": "P8Reportes",
+    "alias": "p8reportes",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\P8Reportes\\Providers\\P8ReportesServiceProvider"
+    ],
+    "files": []
+}

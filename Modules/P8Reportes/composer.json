@@ -1,0 +1,30 @@
+{
+    "name": "nwidart/p8reportes",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\P8Reportes\\": "app/",
+            "Modules\\P8Reportes\\Database\\Factories\\": "database/factories/",
+            "Modules\\P8Reportes\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\P8Reportes\\Tests\\": "tests/"
+        }
+    }
+}

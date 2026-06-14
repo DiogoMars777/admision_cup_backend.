@@ -1,0 +1,11 @@
+{
+    "name": "P6PlanificacionAcademica",
+    "alias": "p6planificacionacademica",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\P6PlanificacionAcademica\\Providers\\P6PlanificacionAcademicaServiceProvider"
+    ],
+    "files": []
+}

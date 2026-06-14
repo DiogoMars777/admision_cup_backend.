@@ -2,8 +2,8 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\P1_GestionDeSeguridadYAcceso\CU01_GestionDeUsuariosYAutenticacion\AuthController;
-use App\Http\Controllers\P1_GestionDeSeguridadYAcceso\CU01_GestionDeUsuariosYAutenticacion\PasswordResetController;
+use Modules\P1SeguridadYAuditoria\Http\Controllers\AuthController;
+use Modules\P1SeguridadYAuditoria\Http\Controllers\PasswordResetController;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/login', function () {
@@ -24,7 +24,7 @@ Route::get('/public/carreras', function() {
 });
 
 Route::get('/public/gestion-activa', function() {
-    $gestion = \App\Models\P3_GestionAcademicaBase\GestionAcademica::query()
+    $gestion = \Modules\P6PlanificacionAcademica\Models\GestionAcademica::query()
         ->leftJoin('gestion_cup', 'gestion_academica.id_gestion_cup', '=', 'gestion_cup.id')
         ->select('gestion_academica.año', 'gestion_cup.nombre as cup_nombre')
         ->where('gestion_academica.estado', 'Activo')
@@ -37,23 +37,24 @@ Route::get('/public/gestion-activa', function() {
 });
 
 
-use App\Http\Controllers\P1_GestionDeSeguridadYAcceso\CU01_GestionDeUsuariosYAutenticacion\UsuarioController;
-use App\Http\Controllers\P1_GestionDeSeguridadYAcceso\CU16_GestionarBitacora\BitacoraController;
-use App\Http\Controllers\P2_GestionDePostulantes\CU2_RegistrarPostulante\PostulanteController;
-use App\Http\Controllers\P2_GestionDePostulantes\CU3_GestionarRequisitos\RequisitoController;
-use App\Http\Controllers\P3_GestionAcademicaBase\CU6_GestionarMaterias\MateriaController;
-use App\Http\Controllers\P3_GestionAcademicaBase\CU7_GestionarDocentes\AspiranteDocenteController;
-use App\Http\Controllers\P3_GestionAcademicaBase\CU7_GestionarDocentes\DocenteController;
-use App\Http\Controllers\P3_GestionAcademicaBase\CU8_GestionarGrupos\GrupoController;
-use App\Http\Controllers\P3_GestionAcademicaBase\CU8_GestionarGrupos\GrupoGeneradorController;
-use App\Http\Controllers\P3_GestionAcademicaBase\Horarios\HorarioGeneradorController;
-use App\Http\Controllers\P3_GestionAcademicaBase\CU9_GestionarAulas\AulaController;
-use App\Http\Controllers\P1_GestionDeSeguridadYAcceso\CU01_GestionDeUsuariosYAutenticacion\RolController;
-use App\Http\Controllers\Pendientes\CarreraController;
-use App\Http\Controllers\Pendientes\GestionAcademicaController;
-use App\Http\Controllers\P3_GestionAcademicaBase\Docentes\DocenteAsignadorController;
-use App\Http\Controllers\Reportes\ReportesController;
-use App\Http\Controllers\P2_GestionDePostulantes\PostulantePortalController;
+use Modules\P1SeguridadYAuditoria\Http\Controllers\UsuarioController;
+use Modules\P1SeguridadYAuditoria\Http\Controllers\BitacoraController;
+use Modules\P2PostulantesYRequisitos\Http\Controllers\PostulanteController;
+use Modules\P3GestionDePagos\Http\Controllers\PagoController;
+use Modules\P2PostulantesYRequisitos\Http\Controllers\RequisitoController;
+use Modules\P4OfertaAcademica\Http\Controllers\MateriaController;
+use Modules\P5RecursosAcademicos\Http\Controllers\AspiranteDocenteController;
+use Modules\P5RecursosAcademicos\Http\Controllers\DocenteController;
+use Modules\P6PlanificacionAcademica\Http\Controllers\GrupoController;
+use Modules\P6PlanificacionAcademica\Http\Controllers\GrupoGeneradorController;
+use Modules\P6PlanificacionAcademica\Http\Controllers\HorarioGeneradorController;
+use Modules\P5RecursosAcademicos\Http\Controllers\AulaController;
+use Modules\P1SeguridadYAuditoria\Http\Controllers\RolController;
+use Modules\P4OfertaAcademica\Http\Controllers\CarreraController;
+use Modules\P7EvaluacionesYAdmision\Http\Controllers\GestionAcademicaController;
+use Modules\P5RecursosAcademicos\Http\Controllers\DocenteAsignadorController;
+use Modules\P8Reportes\Http\Controllers\ReportesController;
+use Modules\P2PostulantesYRequisitos\Http\Controllers\PostulantePortalController;
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
@@ -85,8 +86,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/postulantes', [PostulanteController::class, 'store']);
     Route::put('/postulantes/{id}', [PostulanteController::class, 'update']);
     Route::delete('/postulantes/{id}', [PostulanteController::class, 'destroy']);
-    Route::post('/postulantes/{id}/pagar', [PostulanteController::class, 'pagar']);
-    Route::get('/postulantes-pago', [PostulanteController::class, 'getPendientesPago']);
+    Route::post('/postulantes/{id}/pagar', [PagoController::class, 'pagar']);
+    Route::get('/postulantes-pago', [PagoController::class, 'getPendientesPago']);
 
     // Requisitos (Catálogo y Enlaces)
     Route::get('/catalogo-requisitos', [RequisitoController::class, 'getCatalogo']);
@@ -181,26 +182,26 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/gestiones-academicas/{id}/asignaciones-docentes/automatica', [DocenteAsignadorController::class, 'asignacionAutomatica']);
 
     // Portal Docente
-    Route::get('/docente-portal/dashboard', [\App\Http\Controllers\P3_GestionAcademicaBase\Docentes\DocentePortalController::class, 'getDashboardData']);
-    Route::get('/docente-portal/grupos/{id}/estudiantes', [\App\Http\Controllers\P3_GestionAcademicaBase\Docentes\DocentePortalController::class, 'getEstudiantesPorGrupo']);
-    Route::post('/docente-portal/grupos/{id}/notas', [\App\Http\Controllers\P3_GestionAcademicaBase\Docentes\DocentePortalController::class, 'guardarNotas']);
-    Route::get('/docente-portal/materias', [\App\Http\Controllers\P3_GestionAcademicaBase\Docentes\DocentePortalController::class, 'getMateriasHabilitadas']);
+    Route::get('/docente-portal/dashboard', [\Modules\P5RecursosAcademicos\Http\Controllers\DocentePortalController::class, 'getDashboardData']);
+    Route::get('/docente-portal/grupos/{id}/estudiantes', [\Modules\P5RecursosAcademicos\Http\Controllers\DocentePortalController::class, 'getEstudiantesPorGrupo']);
+    Route::post('/docente-portal/grupos/{id}/notas', [\Modules\P5RecursosAcademicos\Http\Controllers\DocentePortalController::class, 'guardarNotas']);
+    Route::get('/docente-portal/materias', [\Modules\P5RecursosAcademicos\Http\Controllers\DocentePortalController::class, 'getMateriasHabilitadas']);
 
     // Portal Postulante
     Route::get('/postulante-portal/mi-grupo', [PostulantePortalController::class, 'getMiGrupo']);
     
     // Carga Masiva
-    Route::post('/carga-masiva/postulantes', [\App\Http\Controllers\Herramientas\CargaMasivaController::class, 'uploadPostulantes']);
-    Route::get('/carga-masiva/plantilla-postulantes', [\App\Http\Controllers\Herramientas\CargaMasivaController::class, 'downloadPlantillaPostulantes']);
-    Route::post('/carga-masiva/notas', [\App\Http\Controllers\Herramientas\CargaMasivaController::class, 'uploadNotas']);
-    Route::get('/carga-masiva/plantilla-notas', [\App\Http\Controllers\Herramientas\CargaMasivaController::class, 'downloadPlantillaNotas']);
+    Route::post('/carga-masiva/postulantes', [\Modules\P8Reportes\Http\Controllers\CargaMasivaController::class, 'uploadPostulantes']);
+    Route::get('/carga-masiva/plantilla-postulantes', [\Modules\P8Reportes\Http\Controllers\CargaMasivaController::class, 'downloadPlantillaPostulantes']);
+    Route::post('/carga-masiva/notas', [\Modules\P8Reportes\Http\Controllers\CargaMasivaController::class, 'uploadNotas']);
+    Route::get('/carga-masiva/plantilla-notas', [\Modules\P8Reportes\Http\Controllers\CargaMasivaController::class, 'downloadPlantillaNotas']);
 
     // Portal Docente - Asistencia
-    Route::get('/docente-portal/grupos/{id}/asistencias', [\App\Http\Controllers\P3_GestionAcademicaBase\Docentes\DocenteAsistenciaController::class, 'getHistorial']);
-    Route::post('/docente-portal/grupos/{id}/asistencias', [\App\Http\Controllers\P3_GestionAcademicaBase\Docentes\DocenteAsistenciaController::class, 'store']);
-    Route::get('/docente-portal/asistencias/{id}', [\App\Http\Controllers\P3_GestionAcademicaBase\Docentes\DocenteAsistenciaController::class, 'show']);
-    Route::put('/docente-portal/asistencias/{id}', [\App\Http\Controllers\P3_GestionAcademicaBase\Docentes\DocenteAsistenciaController::class, 'update']);
-    Route::delete('/docente-portal/asistencias/{id}', [\App\Http\Controllers\P3_GestionAcademicaBase\Docentes\DocenteAsistenciaController::class, 'destroy']);
+    Route::get('/docente-portal/grupos/{id}/asistencias', [\Modules\P5RecursosAcademicos\Http\Controllers\DocenteAsistenciaController::class, 'getHistorial']);
+    Route::post('/docente-portal/grupos/{id}/asistencias', [\Modules\P5RecursosAcademicos\Http\Controllers\DocenteAsistenciaController::class, 'store']);
+    Route::get('/docente-portal/asistencias/{id}', [\Modules\P5RecursosAcademicos\Http\Controllers\DocenteAsistenciaController::class, 'show']);
+    Route::put('/docente-portal/asistencias/{id}', [\Modules\P5RecursosAcademicos\Http\Controllers\DocenteAsistenciaController::class, 'update']);
+    Route::delete('/docente-portal/asistencias/{id}', [\Modules\P5RecursosAcademicos\Http\Controllers\DocenteAsistenciaController::class, 'destroy']);
 
     Route::post('/logout', [AuthController::class, 'logout']);
 });

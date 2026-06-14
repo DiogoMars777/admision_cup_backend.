@@ -1,0 +1,30 @@
+{
+    "name": "nwidart/p3gestiondepagos",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\P3GestionDePagos\\": "app/",
+            "Modules\\P3GestionDePagos\\Database\\Factories\\": "database/factories/",
+            "Modules\\P3GestionDePagos\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\P3GestionDePagos\\Tests\\": "tests/"
+        }
+    }
+}
