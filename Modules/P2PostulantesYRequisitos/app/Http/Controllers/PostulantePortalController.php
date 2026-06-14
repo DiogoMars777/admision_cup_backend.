@@ -33,6 +33,7 @@ class PostulantePortalController extends Controller
                 'grupo.estado',
                 'grupo.cupo_max',
                 'grupo.cant_estudiante',
+                'gestion_academica.id as id_gestionacademica',
                 'gestion_academica.año as gestion_año',
                 'gestion_academica.nombre as gestion_nombre'
             )
@@ -131,25 +132,26 @@ class PostulantePortalController extends Controller
         }
 
         $promedioFinalGeneral = $cantidadMaterias > 0 ? $sumaPromedios / $cantidadMaterias : 0;
-        
-        // Regla: En cada materia su promedio debe ser mayor o igual a 60 para estar Aprobado en admisión
-        // Si ya dio todos los examenes de todas las materias y pasó todas con >= 60
-        $evaluacionesTotalesRealizadas = collect($materiasData)->sum(function($m) {
-            return collect($m['evaluaciones'])->whereNotNull('puntaje_obtenido')->count();
-        });
-        
-        $examenesTerminados = $evaluacionesTotalesRealizadas >= ($cantidadMaterias * 3);
-        $estadoAdmision = 'En Proceso';
-        if ($examenesTerminados) {
-            $estadoAdmision = $todasAprobadas ? 'Aprobado' : 'Reprobado';
-        }
+
+        // Obtener datos reales de admisión desde la tabla admision
+        $admisionDb = DB::table('admision')
+            ->leftJoin('carrera', 'carrera.id', '=', 'admision.id_carrera')
+            ->where('admision.id_postulante', $idPostulante)
+            ->where('admision.id_gestionacademica', $grupoPostulante->id_gestionacademica)
+            ->select('admision.estado', 'carrera.nombre as carrera_asignada')
+            ->first();
+
+        $estadoAdmision = $admisionDb ? $admisionDb->estado : 'En Proceso';
+        // Solo mostrar la carrera si el estado es Aprobado (que implica que tiene cupo y se le asignó)
+        $carreraAsignada = ($admisionDb && $admisionDb->estado === 'Aprobado') ? $admisionDb->carrera_asignada : null;
 
         return response()->json([
             'grupo'    => $grupoPostulante,
             'materias' => $materiasData,
             'admision' => [
                 'promedio_final' => round($promedioFinalGeneral, 1),
-                'estado' => $estadoAdmision
+                'estado' => $estadoAdmision,
+                'carrera_asignada' => $carreraAsignada
             ]
         ]);
     }

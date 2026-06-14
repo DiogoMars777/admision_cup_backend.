@@ -563,4 +563,76 @@ class GestionAcademicaController extends Controller
             return response()->json(['message' => 'Error al asignar carreras: ' . $e->getMessage()], 500);
         }
     }
+    public function getNotasPostulante($gestionId, $postulanteId)
+    {
+        // Obtener las materias asignadas al estudiante (de su grupo)
+        $grupo = DB::table('postulante_grupo')
+            ->where('id_postulante', $postulanteId)
+            ->first();
+
+        if (!$grupo) return response()->json(['message' => 'No tiene grupo asignado'], 404);
+
+        $materias = DB::table('grupo_materia')
+            ->join('materia', 'materia.id', '=', 'grupo_materia.id_materia')
+            ->where('grupo_materia.id_grupo', $grupo->id_grupo)
+            ->select('materia.id', 'materia.nombre')
+            ->get();
+
+        $resultados = [];
+        foreach ($materias as $m) {
+            // Traer las 3 programaciones (Evaluacion 1, 2, 3)
+            $programaciones = DB::table('programacion_evaluacion')
+                ->join('evaluacion', 'evaluacion.id', '=', 'programacion_evaluacion.id_evaluacion')
+                ->where('programacion_evaluacion.id_gestionacademica', $gestionId)
+                ->where('programacion_evaluacion.id_materia', $m->id)
+                ->orderBy('evaluacion.nombre_eva')
+                ->select('programacion_evaluacion.id', 'evaluacion.nombre_eva')
+                ->get();
+
+            $notasDetalle = [];
+            foreach ($programaciones as $prog) {
+                $nota = DB::table('nota')
+                    ->where('id_postulante', $postulanteId)
+                    ->where('id_programacion_evaluacion', $prog->id)
+                    ->value('puntaje_obtenido');
+                
+                $notasDetalle[] = [
+                    'id_programacion' => $prog->id,
+                    'evaluacion' => $prog->nombre_eva,
+                    'nota' => $nota // null o el numero
+                ];
+            }
+
+            $resultados[] = [
+                'id_materia' => $m->id,
+                'nombre' => $m->nombre,
+                'evaluaciones' => $notasDetalle
+            ];
+        }
+
+        return response()->json($resultados);
+    }
+
+    public function updateNotasPostulante(Request $request, $gestionId, $postulanteId)
+    {
+        $notas = $request->input('notas', []);
+        
+        DB::beginTransaction();
+        try {
+            foreach ($notas as $n) {
+                // Convertir nota vacia a null
+                $valorNota = ($n['nota'] === '' || $n['nota'] === null) ? null : floatval($n['nota']);
+                
+                DB::table('nota')
+                    ->where('id_postulante', $postulanteId)
+                    ->where('id_programacion_evaluacion', $n['id_programacion'])
+                    ->update(['puntaje_obtenido' => $valorNota, 'updated_at' => now()]);
+            }
+            DB::commit();
+            return response()->json(['message' => 'Notas actualizadas exitosamente']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Error al actualizar notas: ' . $e->getMessage()], 500);
+        }
+    }
 }

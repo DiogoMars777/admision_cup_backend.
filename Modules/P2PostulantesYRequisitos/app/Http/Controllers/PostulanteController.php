@@ -73,6 +73,7 @@ class PostulanteController extends Controller
                 ->select(
                     'grupo.nombre as grupo_nombre',
                     'grupo.turno as grupo_turno',
+                    'gestion_academica.id as gestion_id',
                     'gestion_academica.año as gestion_anio',
                     'gestion_cup.nombre as cup_nombre'
                 )
@@ -81,9 +82,27 @@ class PostulanteController extends Controller
             if ($grupoInfo) {
                 $postulante->grupo_asignado = $grupoInfo->grupo_nombre . ' (' . $grupoInfo->grupo_turno . ')';
                 $postulante->gestion_asignada = $grupoInfo->cup_nombre . ' - ' . $grupoInfo->gestion_anio;
+                
+                // Buscar estado de admision
+                $admision = DB::table('admision')
+                    ->leftJoin('carrera', 'admision.id_carrera', '=', 'carrera.id')
+                    ->where('admision.id_postulante', $postulante->id)
+                    ->where('admision.id_gestionacademica', $grupoInfo->gestion_id)
+                    ->select('admision.estado', 'carrera.nombre as carrera_asignada')
+                    ->first();
+                
+                if ($admision) {
+                    $postulante->admision_estado = $admision->estado;
+                    $postulante->admision_carrera = $admision->carrera_asignada;
+                } else {
+                    $postulante->admision_estado = null;
+                    $postulante->admision_carrera = null;
+                }
             } else {
                 $postulante->grupo_asignado = null;
                 $postulante->gestion_asignada = null;
+                $postulante->admision_estado = null;
+                $postulante->admision_carrera = null;
             }
         }
 

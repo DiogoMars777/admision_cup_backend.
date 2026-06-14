@@ -38,6 +38,7 @@ Route::get('/public/gestion-activa', function() {
 
 
 use Modules\P1SeguridadYAuditoria\Http\Controllers\UsuarioController;
+use Modules\P1SeguridadYAuditoria\Http\Controllers\AdministrativoController;
 use Modules\P1SeguridadYAuditoria\Http\Controllers\BitacoraController;
 use Modules\P2PostulantesYRequisitos\Http\Controllers\PostulanteController;
 use Modules\P3GestionDePagos\Http\Controllers\PagoController;
@@ -70,6 +71,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/usuarios/{id}', [UsuarioController::class, 'update']);
     Route::patch('/usuarios/{id}/toggle-status', [UsuarioController::class, 'toggleStatus']);
     Route::delete('/usuarios/{id}', [UsuarioController::class, 'destroy']);
+    
+    // Administrativos y Super Admins
+    Route::get('/administrativos', [AdministrativoController::class, 'index']);
+    Route::post('/administrativos', [AdministrativoController::class, 'store']);
+    Route::put('/administrativos/{id}', [AdministrativoController::class, 'update']);
+    Route::delete('/administrativos/{id}', [AdministrativoController::class, 'destroy']);
     
     // Roles
     Route::get('/roles', [RolController::class, 'index']);
@@ -157,6 +164,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Rutas para ver postulantes por grupo en gestión académica
     Route::get('/gestiones-academicas/{id}/postulantes/grupos', [GestionAcademicaController::class, 'getGruposPostulantes']);
     Route::get('/gestiones-academicas/grupos/{grupoId}/postulantes', [GestionAcademicaController::class, 'getPostulantesPorGrupo']);
+    Route::get('/gestiones-academicas/{id}/postulantes/{postulanteId}/notas', [GestionAcademicaController::class, 'getNotasPostulante']);
+    Route::put('/gestiones-academicas/{id}/postulantes/{postulanteId}/notas', [GestionAcademicaController::class, 'updateNotasPostulante']);
 
     // Rutas de Admisión y Resumen de Carreras
     Route::get('/gestiones-academicas/{id}/admision/resumen', [GestionAcademicaController::class, 'getResumenAdmision']);
