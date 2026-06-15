@@ -273,85 +273,94 @@ class GestionAcademicaController extends Controller
 
     public function getPostulantesPorGrupo($grupoId)
     {
-        $postulantes = DB::table('postulante_grupo')
-            ->join('postulante', 'postulante_grupo.id_postulante', '=', 'postulante.id_persona')
-            ->join('persona', 'postulante.id_persona', '=', 'persona.id')
-            ->where('postulante_grupo.id_grupo', $grupoId)
-            ->select('persona.id', 'persona.nombre', 'persona.ci', 'persona.correo', 'persona.telefono')
-            ->orderBy('persona.nombre')
-            ->get();
-            
-        $materiasGrupo = DB::table('grupo_materia')
-            ->join('materia', 'materia.id', '=', 'grupo_materia.id_materia')
-            ->where('grupo_materia.id_grupo', $grupoId)
-            ->select('materia.id', 'materia.nombre')
-            ->get();
-
-        foreach ($postulantes as $postulante) {
-            $notasMaterias = [];
-            $sumaPromedios = 0;
-            $materiasTerminadas = 0;
-            $aprobadoGeneral = true;
-            $tieneAlgunaNota = false;
-
-            foreach ($materiasGrupo as $materia) {
-                $notas = DB::table('nota')
-                    ->join('programacion_evaluacion', 'programacion_evaluacion.id', '=', 'nota.id_programacion_evaluacion')
-                    ->where('nota.id_postulante', $postulante->id)
-                    ->where('programacion_evaluacion.id_materia', $materia->id)
-                    ->pluck('nota.puntaje_obtenido');
+        try {
+            $postulantes = DB::table('postulante_grupo')
+                ->join('postulante', 'postulante_grupo.id_postulante', '=', 'postulante.id_persona')
+                ->join('persona', 'postulante.id_persona', '=', 'persona.id')
+                ->where('postulante_grupo.id_grupo', $grupoId)
+                ->select('persona.id', 'persona.nombre', 'persona.ci', 'persona.correo', 'persona.telefono')
+                ->orderBy('persona.nombre')
+                ->get();
                 
-                $sumaMateria = 0;
-                $notasIngresadas = 0;
-                foreach ($notas as $nota) {
-                    if ($nota !== null) {
-                        $sumaMateria += $nota;
-                        $notasIngresadas++;
-                        $tieneAlgunaNota = true;
-                    }
-                }
-                
-                // Solo si tiene las 3 notas de la materia, calculamos su promedio, de lo contrario es null
-                if ($notasIngresadas == 3) {
-                    $promedioMateria = $sumaMateria / 3;
-                    $materiasTerminadas++;
+            $materiasGrupo = DB::table('grupo_materia')
+                ->join('materia', 'materia.id', '=', 'grupo_materia.id_materia')
+                ->where('grupo_materia.id_grupo', $grupoId)
+                ->select('materia.id', 'materia.nombre')
+                ->get();
+
+            foreach ($postulantes as $postulante) {
+                $notasMaterias = [];
+                $sumaPromedios = 0;
+                $materiasTerminadas = 0;
+                $aprobadoGeneral = true;
+                $tieneAlgunaNota = false;
+
+                foreach ($materiasGrupo as $materia) {
+                    $notas = DB::table('nota')
+                        ->join('programacion_evaluacion', 'programacion_evaluacion.id', '=', 'nota.id_programacion_evaluacion')
+                        ->where('nota.id_postulante', $postulante->id)
+                        ->where('programacion_evaluacion.id_materia', $materia->id)
+                        ->pluck('nota.puntaje_obtenido');
                     
-                    if ($promedioMateria < 60) {
-                        $aprobadoGeneral = false;
+                    $sumaMateria = 0;
+                    $notasIngresadas = 0;
+                    foreach ($notas as $nota) {
+                        if ($nota !== null) {
+                            $sumaMateria += $nota;
+                            $notasIngresadas++;
+                            $tieneAlgunaNota = true;
+                        }
                     }
-                } else {
-                    $promedioMateria = null;
-                    $aprobadoGeneral = false; // No puede aprobar si le faltan notas
+                    
+                    // Solo si tiene las 3 notas de la materia, calculamos su promedio, de lo contrario es null
+                    if ($notasIngresadas == 3) {
+                        $promedioMateria = $sumaMateria / 3;
+                        $materiasTerminadas++;
+                        
+                        if ($promedioMateria < 60) {
+                            $aprobadoGeneral = false;
+                        }
+                    } else {
+                        $promedioMateria = null;
+                        $aprobadoGeneral = false; // No puede aprobar si le faltan notas
+                    }
+                    
+                    $nombreLimpio = mb_strtolower(trim($materia->nombre), 'UTF-8');
+                    if (strpos($nombreLimpio, 'matem') !== false) $key = 'Matemática';
+                    else if (strpos($nombreLimpio, 'ingl') !== false) $key = 'Inglés';
+                    else if (strpos($nombreLimpio, 'físic') !== false || strpos($nombreLimpio, 'fisic') !== false) $key = 'Física';
+                    else if (strpos($nombreLimpio, 'computaci') !== false) $key = 'Computación';
+                    else $key = $materia->nombre;
+
+                    $notasMaterias[$key] = $promedioMateria !== null ? round($promedioMateria, 1) : null;
+                    if ($promedioMateria !== null) {
+                        $sumaPromedios += $promedioMateria;
+                    }
                 }
+
+                $promedioGral = $materiasTerminadas == count($materiasGrupo) && count($materiasGrupo) > 0 
+                    ? $sumaPromedios / count($materiasGrupo) 
+                    : null;
                 
-                $nombreLimpio = mb_strtolower(trim($materia->nombre), 'UTF-8');
-                if (strpos($nombreLimpio, 'matem') !== false) $key = 'Matemática';
-                else if (strpos($nombreLimpio, 'ingl') !== false) $key = 'Inglés';
-                else if (strpos($nombreLimpio, 'físic') !== false || strpos($nombreLimpio, 'fisic') !== false) $key = 'Física';
-                else if (strpos($nombreLimpio, 'computaci') !== false) $key = 'Computación';
-                else $key = $materia->nombre;
-
-                $notasMaterias[$key] = $promedioMateria !== null ? round($promedioMateria, 1) : null;
-                if ($promedioMateria !== null) {
-                    $sumaPromedios += $promedioMateria;
+                $postulante->notas = $notasMaterias;
+                $postulante->promedio_final = $promedioGral !== null ? round($promedioGral, 1) : null;
+                
+                if ($materiasTerminadas == count($materiasGrupo) && count($materiasGrupo) > 0) {
+                    $postulante->estado = $aprobadoGeneral ? 'Aprobado' : 'Reprobado';
+                } else {
+                    $postulante->estado = 'En Proceso';
                 }
             }
-
-            $promedioGral = $materiasTerminadas == count($materiasGrupo) && count($materiasGrupo) > 0 
-                ? $sumaPromedios / count($materiasGrupo) 
-                : null;
-            
-            $postulante->notas = $notasMaterias;
-            $postulante->promedio_final = $promedioGral !== null ? round($promedioGral, 1) : null;
-            
-            if ($materiasTerminadas == count($materiasGrupo) && count($materiasGrupo) > 0) {
-                $postulante->estado = $aprobadoGeneral ? 'Aprobado' : 'Reprobado';
-            } else {
-                $postulante->estado = 'En Proceso';
-            }
+                
+            return response()->json($postulantes);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error al obtener postulantes del grupo',
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ], 500);
         }
-            
-        return response()->json($postulantes);
     }
 
     public function getResumenAdmision($id)
