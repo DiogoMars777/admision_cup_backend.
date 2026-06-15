@@ -6,6 +6,14 @@
     "keywords": ["laravel", "framework"],
     "license": "MIT",
     "require": {
+{
+    "$schema": "https://getcomposer.org/schema.json",
+    "name": "laravel/laravel",
+    "type": "project",
+    "description": "The skeleton application for the Laravel framework.",
+    "keywords": ["laravel", "framework"],
+    "license": "MIT",
+    "require": {
         "php": "^8.3",
         "ext-gd": "*",
         "ext-zip": "*",
@@ -13,8 +21,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0",
         "maatwebsite/excel": "^3.1",
-        "nwidart/laravel-modules": "*",
-        "wikimedia/composer-merge-plugin": "^2.1"
+        "nwidart/laravel-modules": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -28,7 +35,14 @@
     "autoload": {
         "psr-4": {
             "App\\": "app/",
-            "Modules\\": "Modules/",
+            "Modules\\P1SeguridadYAuditoria\\": "Modules/P1SeguridadYAuditoria/app/",
+            "Modules\\P2PostulantesYRequisitos\\": "Modules/P2PostulantesYRequisitos/app/",
+            "Modules\\P3GestionDePagos\\": "Modules/P3GestionDePagos/app/",
+            "Modules\\P4OfertaAcademica\\": "Modules/P4OfertaAcademica/app/",
+            "Modules\\P5RecursosAcademicos\\": "Modules/P5RecursosAcademicos/app/",
+            "Modules\\P6PlanificacionAcademica\\": "Modules/P6PlanificacionAcademica/app/",
+            "Modules\\P7EvaluacionesYAdmision\\": "Modules/P7EvaluacionesYAdmision/app/",
+            "Modules\\P8Reportes\\": "Modules/P8Reportes/app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
         }
@@ -77,11 +91,6 @@
     "extra": {
         "laravel": {
             "dont-discover": []
-        },
-        "merge-plugin": {
-            "include": [
-                "Modules/*/composer.json"
-            ]
         }
     },
     "config": {
@@ -90,8 +99,7 @@
         "sort-packages": true,
         "allow-plugins": {
             "pestphp/pest-plugin": true,
-            "php-http/discovery": true,
-            "wikimedia/composer-merge-plugin": true
+            "php-http/discovery": true
         }
     },
     "minimum-stability": "stable",
