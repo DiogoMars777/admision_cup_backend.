@@ -353,7 +353,7 @@ class GestionAcademicaController extends Controller
             }
                 
             return response()->json($postulantes);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return response()->json([
                 'message' => 'Error al obtener postulantes del grupo',
                 'error' => $e->getMessage(),
