@@ -36,72 +36,88 @@ class PostulanteController extends Controller
             }
 
             $postulantes = $query->orderBy('persona.id', 'desc')->get();
+            $postulantesIds = $postulantes->pluck('id')->toArray();
 
-            // Check if id_modalidad exists to avoid errors on old schemas
+            // Check if id_modalidad exists
             $hasModalidadColumn = \Illuminate\Support\Facades\Schema::hasColumn('postulante_carrera', 'id_modalidad');
 
-            // Agregar carreras y modalidades de cada postulante
-            foreach ($postulantes as $postulante) {
-                $carrerasQuery = \Modules\P2PostulantesYRequisitos\Models\PostulanteCarrera::query()
-                    ->join('carrera', 'postulante_carrera.id_carrera', '=', 'carrera.id')
-                    ->where('postulante_carrera.id_postulante', $postulante->id);
-                
-                if ($hasModalidadColumn) {
-                    $carrerasQuery->leftJoin('modalidad', 'postulante_carrera.id_modalidad', '=', 'modalidad.id')
-                        ->select(
-                            'carrera.nombre as carrera_nombre',
-                            'modalidad.nombre as modalidad_nombre',
-                            'postulante_carrera.prioridad'
-                        );
-                } else {
-                    $carrerasQuery->select(
+            // 1. Fetch all carreras for all postulantes
+            $carrerasQuery = \Modules\P2PostulantesYRequisitos\Models\PostulanteCarrera::query()
+                ->join('carrera', 'postulante_carrera.id_carrera', '=', 'carrera.id')
+                ->whereIn('postulante_carrera.id_postulante', $postulantesIds);
+            
+            if ($hasModalidadColumn) {
+                $carrerasQuery->leftJoin('modalidad', 'postulante_carrera.id_modalidad', '=', 'modalidad.id')
+                    ->select(
+                        'postulante_carrera.id_postulante',
                         'carrera.nombre as carrera_nombre',
+                        'modalidad.nombre as modalidad_nombre',
                         'postulante_carrera.prioridad'
                     );
-                }
+            } else {
+                $carrerasQuery->select(
+                    'postulante_carrera.id_postulante',
+                    'carrera.nombre as carrera_nombre',
+                    'postulante_carrera.prioridad'
+                );
+            }
+            
+            $todasCarreras = $carrerasQuery->orderBy('postulante_carrera.prioridad')->get()->groupBy('id_postulante');
 
-                $carreras = $carrerasQuery->orderBy('postulante_carrera.prioridad')->get();
+            // 2. Fetch all grupos for all postulantes
+            $todosGruposInfo = DB::table('postulante_grupo')
+                ->join('grupo', 'postulante_grupo.id_grupo', '=', 'grupo.id')
+                ->join('gestion_academica', 'grupo.id_gestionacademica', '=', 'gestion_academica.id')
+                ->join('gestion_cup', 'gestion_academica.id_gestion_cup', '=', 'gestion_cup.id')
+                ->whereIn('postulante_grupo.id_postulante', $postulantesIds)
+                ->select(
+                    'postulante_grupo.id_postulante',
+                    'grupo.nombre as grupo_nombre',
+                    'grupo.turno as grupo_turno',
+                    'gestion_academica.id as gestion_id',
+                    'gestion_academica.año as gestion_anio',
+                    'gestion_cup.nombre as cup_nombre'
+                )
+                ->get()->keyBy('id_postulante');
 
+            // 3. Fetch all admisiones for all postulantes
+            $todasAdmisiones = DB::table('admision')
+                ->leftJoin('carrera', 'admision.id_carrera', '=', 'carrera.id')
+                ->whereIn('admision.id_postulante', $postulantesIds)
+                ->select('admision.id_postulante', 'admision.id_gestionacademica', 'admision.estado', 'carrera.nombre as carrera_asignada')
+                ->get()->groupBy('id_postulante');
+
+            // Process data in memory
+            foreach ($postulantes as $postulante) {
                 $postulante->carrera1 = '';
                 $postulante->modalidad1 = '';
                 $postulante->carrera2 = '';
                 $postulante->modalidad2 = '';
 
-                foreach ($carreras as $c) {
-                    if ($c->prioridad == 1) {
-                        $postulante->carrera1 = $c->carrera_nombre;
-                        $postulante->modalidad1 = $hasModalidadColumn ? ($c->modalidad_nombre ?? '') : '';
-                    } elseif ($c->prioridad == 2) {
-                        $postulante->carrera2 = $c->carrera_nombre;
-                        $postulante->modalidad2 = $hasModalidadColumn ? ($c->modalidad_nombre ?? '') : '';
+                if (isset($todasCarreras[$postulante->id])) {
+                    $carreras = $todasCarreras[$postulante->id];
+                    foreach ($carreras as $c) {
+                        if ($c->prioridad == 1) {
+                            $postulante->carrera1 = $c->carrera_nombre;
+                            $postulante->modalidad1 = $hasModalidadColumn ? ($c->modalidad_nombre ?? '') : '';
+                        } elseif ($c->prioridad == 2) {
+                            $postulante->carrera2 = $c->carrera_nombre;
+                            $postulante->modalidad2 = $hasModalidadColumn ? ($c->modalidad_nombre ?? '') : '';
+                        }
                     }
                 }
 
-                $grupoInfo = DB::table('postulante_grupo')
-                    ->join('grupo', 'postulante_grupo.id_grupo', '=', 'grupo.id')
-                    ->join('gestion_academica', 'grupo.id_gestionacademica', '=', 'gestion_academica.id')
-                    ->join('gestion_cup', 'gestion_academica.id_gestion_cup', '=', 'gestion_cup.id')
-                    ->where('postulante_grupo.id_postulante', $postulante->id)
-                    ->select(
-                        'grupo.nombre as grupo_nombre',
-                        'grupo.turno as grupo_turno',
-                        'gestion_academica.id as gestion_id',
-                        'gestion_academica.año as gestion_anio',
-                        'gestion_cup.nombre as cup_nombre'
-                    )
-                    ->first();
+                if (isset($todosGruposInfo[$postulante->id])) {
+                    $grupoInfo = $todosGruposInfo[$postulante->id];
                     
-                if ($grupoInfo) {
                     $postulante->grupo_asignado = $grupoInfo->grupo_nombre . ' (' . $grupoInfo->grupo_turno . ')';
                     $postulante->gestion_asignada = $grupoInfo->cup_nombre . ' - ' . $grupoInfo->gestion_anio;
                     
                     // Buscar estado de admision
-                    $admision = DB::table('admision')
-                        ->leftJoin('carrera', 'admision.id_carrera', '=', 'carrera.id')
-                        ->where('admision.id_postulante', $postulante->id)
-                        ->where('admision.id_gestionacademica', $grupoInfo->gestion_id)
-                        ->select('admision.estado', 'carrera.nombre as carrera_asignada')
-                        ->first();
+                    $admision = null;
+                    if (isset($todasAdmisiones[$postulante->id])) {
+                        $admision = $todasAdmisiones[$postulante->id]->firstWhere('id_gestionacademica', $grupoInfo->gestion_id);
+                    }
                     
                     if ($admision) {
                         $postulante->admision_estado = $admision->estado;
