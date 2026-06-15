@@ -11,53 +11,80 @@ class PagoController extends Controller
 {
     public function getPendientesPago(Request $request)
     {
-        // Traer todos los postulantes
-        $postulantes = \Modules\P2PostulantesYRequisitos\Models\Postulante::query()
-            ->join('persona', 'postulante.id_persona', '=', 'persona.id')
-            ->leftJoin('usuario', 'usuario.id_persona', '=', 'persona.id')
-            ->select(
-                'persona.id',
-                'persona.ci',
-                'persona.nombre',
-                'persona.telefono',
-                'postulante.colegio',
-                'persona.correo',
-                'usuario.estado as estado_usuario'
-            )
-            ->orderBy('persona.nombre')
-            ->get();
+        try {
+            // Traer todos los postulantes
+            $postulantes = \Modules\P2PostulantesYRequisitos\Models\Postulante::query()
+                ->join('persona', 'postulante.id_persona', '=', 'persona.id')
+                ->leftJoin('usuario', 'usuario.id_persona', '=', 'persona.id')
+                ->select(
+                    'persona.id',
+                    'persona.ci',
+                    'persona.nombre',
+                    'persona.telefono',
+                    'postulante.colegio',
+                    'persona.correo',
+                    'usuario.estado as estado_usuario'
+                )
+                ->orderBy('persona.nombre')
+                ->get();
 
-        $resultado = [];
-        foreach ($postulantes as $p) {
-            // Contar requisitos totales y entregados
-            $totalReqs = \Modules\P2PostulantesYRequisitos\Models\PostulanteRequisito::query()
-                ->where('id_postulante', $p->id)->count();
-            $entregados = \Modules\P2PostulantesYRequisitos\Models\PostulanteRequisito::query()
-                ->where('id_postulante', $p->id)
-                ->where('estado', 'Entregado')->count();
+            $postulantesIds = $postulantes->pluck('id')->toArray();
 
-            // Solo incluir si tiene requisitos Y todos están entregados
-            if ($totalReqs > 0 && $totalReqs === $entregados) {
-                // Buscar si ya tiene pago
-                $pago = \Modules\P3GestionDePagos\Models\Pago::where('id_postulante', $p->id)->latest('fecha')->first();
+            // Bulk fetch de conteo de requisitos totales y entregados
+            $requisitosTotales = DB::table('postulante_requisito')
+                ->whereIn('id_postulante', $postulantesIds)
+                ->select('id_postulante', DB::raw('count(*) as total'))
+                ->groupBy('id_postulante')
+                ->pluck('total', 'id_postulante');
 
-                $resultado[] = [
-                    'id'           => $p->id,
-                    'ci'           => $p->ci,
-                    'nombre'       => $p->nombre,
-                    'telefono'     => $p->telefono,
-                    'colegio'      => $p->colegio,
-                    'correo'       => $p->correo,
-                    'estado_usuario' => $p->estado_usuario,
-                    'tiene_pago'   => !is_null($pago),
-                    'pago'         => $pago,
-                    'docs_total'   => $totalReqs,
-                    'docs_entregados' => $entregados,
-                ];
+            $requisitosEntregados = DB::table('postulante_requisito')
+                ->whereIn('id_postulante', $postulantesIds)
+                ->where('estado', 'Entregado')
+                ->select('id_postulante', DB::raw('count(*) as entregados'))
+                ->groupBy('id_postulante')
+                ->pluck('entregados', 'id_postulante');
+
+            // Bulk fetch del último pago por postulante
+            // Usamos subquery o fetch all y agrupamos
+            $todosLosPagos = \Modules\P3GestionDePagos\Models\Pago::whereIn('id_postulante', $postulantesIds)
+                ->orderBy('fecha', 'desc')
+                ->get()
+                ->groupBy('id_postulante');
+
+            $resultado = [];
+            foreach ($postulantes as $p) {
+                $totalReqs = isset($requisitosTotales[$p->id]) ? $requisitosTotales[$p->id] : 0;
+                $entregados = isset($requisitosEntregados[$p->id]) ? $requisitosEntregados[$p->id] : 0;
+
+                // Solo incluir si tiene requisitos Y todos están entregados
+                if ($totalReqs > 0 && $totalReqs === $entregados) {
+                    $pago = isset($todosLosPagos[$p->id]) ? $todosLosPagos[$p->id]->first() : null;
+
+                    $resultado[] = [
+                        'id'           => $p->id,
+                        'ci'           => $p->ci,
+                        'nombre'       => $p->nombre,
+                        'telefono'     => $p->telefono,
+                        'colegio'      => $p->colegio,
+                        'correo'       => $p->correo,
+                        'estado_usuario' => $p->estado_usuario,
+                        'tiene_pago'   => !is_null($pago),
+                        'pago'         => $pago,
+                        'docs_total'   => $totalReqs,
+                        'docs_entregados' => $entregados,
+                    ];
+                }
             }
-        }
 
-        return response()->json($resultado);
+            return response()->json($resultado);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => 'Error al listar pagos de postulantes',
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ], 500);
+        }
     }
 
     public function pagar($id)
