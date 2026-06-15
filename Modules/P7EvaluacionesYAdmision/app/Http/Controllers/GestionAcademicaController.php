@@ -287,6 +287,29 @@ class GestionAcademicaController extends Controller
                 ->where('grupo_materia.id_grupo', $grupoId)
                 ->select('materia.id', 'materia.nombre')
                 ->get();
+                
+            $postulantesIds = $postulantes->pluck('id')->toArray();
+            
+            // Bulk fetch ALL notas for these postulantes
+            $todasNotas = DB::table('nota')
+                ->join('programacion_evaluacion', 'programacion_evaluacion.id', '=', 'nota.id_programacion_evaluacion')
+                ->whereIn('nota.id_postulante', $postulantesIds)
+                ->select('nota.id_postulante', 'programacion_evaluacion.id_materia', 'nota.puntaje_obtenido')
+                ->get();
+                
+            // Group notas by postulante and materia
+            $notasAgrupadas = [];
+            foreach ($todasNotas as $nota) {
+                if (!isset($notasAgrupadas[$nota->id_postulante])) {
+                    $notasAgrupadas[$nota->id_postulante] = [];
+                }
+                if (!isset($notasAgrupadas[$nota->id_postulante][$nota->id_materia])) {
+                    $notasAgrupadas[$nota->id_postulante][$nota->id_materia] = [];
+                }
+                if ($nota->puntaje_obtenido !== null) {
+                    $notasAgrupadas[$nota->id_postulante][$nota->id_materia][] = $nota->puntaje_obtenido;
+                }
+            }
 
             foreach ($postulantes as $postulante) {
                 $notasMaterias = [];
@@ -296,20 +319,14 @@ class GestionAcademicaController extends Controller
                 $tieneAlgunaNota = false;
 
                 foreach ($materiasGrupo as $materia) {
-                    $notas = DB::table('nota')
-                        ->join('programacion_evaluacion', 'programacion_evaluacion.id', '=', 'nota.id_programacion_evaluacion')
-                        ->where('nota.id_postulante', $postulante->id)
-                        ->where('programacion_evaluacion.id_materia', $materia->id)
-                        ->pluck('nota.puntaje_obtenido');
+                    $notas = isset($notasAgrupadas[$postulante->id][$materia->id]) 
+                        ? $notasAgrupadas[$postulante->id][$materia->id] 
+                        : [];
                     
-                    $sumaMateria = 0;
-                    $notasIngresadas = 0;
-                    foreach ($notas as $nota) {
-                        if ($nota !== null) {
-                            $sumaMateria += $nota;
-                            $notasIngresadas++;
-                            $tieneAlgunaNota = true;
-                        }
+                    $sumaMateria = array_sum($notas);
+                    $notasIngresadas = count($notas);
+                    if ($notasIngresadas > 0) {
+                        $tieneAlgunaNota = true;
                     }
                     
                     // Solo si tiene las 3 notas de la materia, calculamos su promedio, de lo contrario es null
